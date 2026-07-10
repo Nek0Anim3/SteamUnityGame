@@ -1,4 +1,3 @@
-using System;
 using Enemy;
 using Enemy.States;
 using Unity.Netcode;
@@ -14,7 +13,6 @@ public enum EnemyStates
 
 public class EnemyState : NetworkBehaviour
 {
-    public event Action<Vector3> OnChangeWaypoint;
 
     private EnemyStates _currentState; 
     private IEnemyStates _enemyState;
@@ -43,12 +41,27 @@ public class EnemyState : NetworkBehaviour
         if (!IsServer) { enabled = false; }
         _enemyState.Enter();
     }
+    
+    //DEBUG AREA
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = new Color(0f, 0f, 1f, 0.5f);
+        Gizmos.DrawSphere(roamingState.lastPos, 6.0f);
+
+        foreach (var wpt in roamingState.visitedPoints_DEBUG)
+        {
+            Gizmos.color = new Color(1.0f, 0.0f, 0.0f, 1.0f);     
+            Gizmos.DrawSphere(wpt, 0.5f);
+        }
+
+       
+    }
 
 
     public void ChangeState(IEnemyStates newState)
     {
         
-        UnityEngine.Debug.Log($"[NPC] Change state to {newState}");
+        Debug.Log($"[NPC] Change state to {newState}");
         _enemyState.Exit();
         _enemyState = newState;
         _enemyState.Enter();
@@ -56,7 +69,7 @@ public class EnemyState : NetworkBehaviour
 
     public void SetStateFlag(EnemyStates newState)
     {
-        UnityEngine.Debug.Log($"[NPC] State flag set to {newState}");
+        Debug.Log($"[NPC] State flag set to {newState}");
         _currentState = newState;
     }
 

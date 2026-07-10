@@ -14,6 +14,7 @@ public class EnemyWaypointNav : MonoBehaviour
     private Dictionary<string, NavWaypoint> VisitedWaypoints;
     private Vector3 currentWaypoint;
 
+    
     private void Awake()
     {
         NPC_Movement = GetComponent<EnemyMovement>();
@@ -25,10 +26,9 @@ public class EnemyWaypointNav : MonoBehaviour
     {
         NavWaypoint waypoint = NAV_waypointData.SelectNextRandomPoint(searchPosition, 6.0f);
         NPC_Movement.SetNewWaypoint(waypoint.position);
-        
         currentWaypoint = waypoint.position;
     }
-
+    
     public Vector3 GetCurrentWaypoint()
     {
         return currentWaypoint;

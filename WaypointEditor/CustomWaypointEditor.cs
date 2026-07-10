@@ -15,7 +15,7 @@ namespace WaypointEditor
         private EnemyWaypointNav _target;
         private WaypointData _data;
         private bool _addMode = false;
-
+        
         private void OnEnable()
         {
             _target = (EnemyWaypointNav)target;
@@ -159,13 +159,14 @@ namespace WaypointEditor
 
 
             EditorGUI.BeginChangeCheck();
-            Vector3 newPos = Handles.PositionHandle(waypoint.position, Quaternion.identity);
+            
+            /*Vector3 newPos = Handles.PositionHandle(waypoint.position, Quaternion.identity);*/
 
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(_data, "Move Waypoint");
                 var updated = _data.NAV_waypoints[index];
-                updated.position = newPos;
+                /*updated.position = newPos;*/ 
                 _data.NAV_waypoints[index] = updated;
                 EditorUtility.SetDirty(_data);
             }

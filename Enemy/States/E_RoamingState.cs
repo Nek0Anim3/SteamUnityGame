@@ -1,4 +1,5 @@
-﻿using TMPro.EditorUtilities;
+﻿using System.Collections.Generic;
+using TMPro.EditorUtilities;
 using UnityEngine;
 
 namespace Enemy.States
@@ -7,9 +8,14 @@ namespace Enemy.States
     {
         private EnemyContext _context;
         private EnemyState stateMachine;
-        private bool isActive = false;
-        private bool isMoving = false;
-        private Vector3 lastPos;
+        private bool isActive;
+        private bool isMoving;
+        public Vector3 lastPos;
+
+        private Vector3 currentWpt;
+        //DEBUG AREA
+        public List<Vector3> visitedPoints_DEBUG = new List<Vector3>();
+        
         //конструктор
         public E_RoamingState(EnemyState machine, EnemyContext ctx)
         {
@@ -17,6 +23,9 @@ namespace Enemy.States
             stateMachine = machine;
             _context = ctx;
             lastPos = machine.transform.position;
+            
+            
+            
         }
         
         
@@ -25,7 +34,10 @@ namespace Enemy.States
             isActive = true;
 
             _context.EnemyWaypointNav.SetNewDestination(lastPos);
-            lastPos = _context.EnemyWaypointNav.GetCurrentWaypoint();
+            currentWpt = _context.EnemyWaypointNav.GetCurrentWaypoint();
+            lastPos = _context.EnemyMovement.transform.position;
+            //DEBUG AREA
+            visitedPoints_DEBUG.Add(lastPos);
             isMoving = true;
         }
 
@@ -41,8 +53,9 @@ namespace Enemy.States
             if (!isActive) return;
             if (isMoving)
             {
-                if (Vector3.Distance(_context.EnemyMovement.transform.position, lastPos) < 1.0f)
+                if (Vector3.Distance(_context.EnemyMovement.transform.position, currentWpt) < 1.0f)
                 {
+                    isMoving = false;
                     stateMachine.ChangeState(stateMachine.idleState);
                 }
             }

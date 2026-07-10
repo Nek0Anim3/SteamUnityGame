@@ -17,25 +17,37 @@ namespace Enemy.EnemyData
         //-----------------
         public NavWaypoint SelectNextRandomPoint(Vector3 scanPos, float radius)
         {
-            List<NavWaypoint> filteredWaypoints = new List<NavWaypoint>();
-            for (int i = 0; i < NAV_waypoints.Count; i++)
-            {
-                if (VisitedWaypoints.Contains(NAV_waypoints[i])) continue;
 
-                float distance = Vector3.Distance(scanPos, NAV_waypoints[i].position);
-                if (distance < radius)
-                {
-                    filteredWaypoints.Add(NAV_waypoints[i]);
-                }
+            List<NavWaypoint> filteredWaypoints = new List<NavWaypoint>();
+            
+            ScanWaypoints(scanPos, radius, filteredWaypoints);
+            if (filteredWaypoints.Count == 0)
+            {
+                VisitedWaypoints.Clear();
+                ScanWaypoints(scanPos, radius, filteredWaypoints);
             }
-            /*Debug.Log($"[NAV] Waypoints count = {NAV_waypoints.Count}");
-            Debug.Log($"[NAV] Filtered count = {filteredWaypoints.Count}");*/
+            
+            Debug.Log($"[NAV] Waypoints count = {NAV_waypoints.Count}");
+            Debug.Log($"[NAV] Filtered count = {filteredWaypoints.Count}");
             NavWaypoint selectedPoint = filteredWaypoints[Random.Range(0, filteredWaypoints.Count)];
-            /*Debug.Log($"[NAV] Adding to visited wpt {selectedPoint.position}");*/
+            Debug.Log($"[NAV] Adding to visited wpt {selectedPoint.position}");
             VisitedWaypoints.Add(selectedPoint);
             return selectedPoint;
         }
 
+        public void ScanWaypoints(Vector3 scanPos, float radius, List<NavWaypoint> filteredWaypointsList)
+        {
+            for (int i = 0; i < NAV_waypoints.Count; i++)
+            {
+                if (VisitedWaypoints.Contains(NAV_waypoints[i])) continue;
+                
+                float distance = Vector3.Distance(scanPos, NAV_waypoints[i].position);
+                if (distance < radius)
+                {
+                    filteredWaypointsList.Add(NAV_waypoints[i]);
+                }
+            }
+        }
 
     }
 }
