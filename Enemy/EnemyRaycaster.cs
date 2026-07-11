@@ -29,19 +29,20 @@ namespace Enemy
 
         private void FixedUpdate()
         {
-            //FIX THIS PLS ...
             if (!isActive) return;
             TargetPosition = playerCollider.transform.position;
-            if (Physics.Raycast(transform.position, TargetPosition, out RaycastHit hit, 20.0f))
+            
+            if (Physics.Raycast(new Vector3(transform.position.x, transform.position.y, transform.position.z + 0.5f), TargetPosition - transform.position, out RaycastHit hit)) 
             {
+                Debug.DrawLine(transform.position, hit.point, Color.green);
                 if (hit.collider.CompareTag("Player"))
                 {
-                    Debug.Log("PLAYER HITS RAYCAST");
+                    Debug.Log("[NPC] Raycast has LOS with player!");
                     OnPlayerRaycastVisible?.Invoke();
                     isActive = false;
                 }
-            } 
-            
+            }
+
         }
     }
 }
