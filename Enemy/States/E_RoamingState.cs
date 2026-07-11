@@ -14,7 +14,7 @@ namespace Enemy.States
 
         private Vector3 currentWpt;
         //DEBUG AREA
-        public List<Vector3> visitedPoints_DEBUG = new List<Vector3>();
+        /*public List<Vector3> visitedPoints_DEBUG = new List<Vector3>();*/
         
         //конструктор
         public E_RoamingState(EnemyState machine, EnemyContext ctx)
@@ -23,8 +23,6 @@ namespace Enemy.States
             stateMachine = machine;
             _context = ctx;
             lastPos = machine.transform.position;
-            
-            
             
         }
         
@@ -37,7 +35,7 @@ namespace Enemy.States
             currentWpt = _context.EnemyWaypointNav.GetCurrentWaypoint();
             lastPos = _context.EnemyMovement.transform.position;
             //DEBUG AREA
-            visitedPoints_DEBUG.Add(lastPos);
+            /*visitedPoints_DEBUG.Add(lastPos);*/
             isMoving = true;
         }
 

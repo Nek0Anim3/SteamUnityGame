@@ -19,9 +19,10 @@ public class EnemyState : NetworkBehaviour
 
     private EnemyContext context;
     
+    
     public E_IdleState idleState { get; private set; }
     public E_RoamingState roamingState { get; private set; }
-
+    public E_ChaseState chaseState { get; private set; }
 
     private float timerSeconds;
     private bool isTimerRunning;
@@ -30,20 +31,24 @@ public class EnemyState : NetworkBehaviour
     {
         context = GetComponent<EnemyContext>();
         
+        //States
         idleState = new E_IdleState(this, context);
         roamingState = new E_RoamingState(this, context);
+        chaseState = new E_ChaseState(this, context);
         
         _enemyState = idleState;
+        
     }
 
     public override void OnNetworkSpawn()
     {
         if (!IsServer) { enabled = false; }
         _enemyState.Enter();
+        context.EnemyRaycaster.OnPlayerRaycastVisible += ForceChaseState;
     }
     
-    //DEBUG AREA
-    private void OnDrawGizmos()
+    //DEBUG NPC ROAMING SPHERE DRAWS
+    /*private void OnDrawGizmos()
     {
         Gizmos.color = new Color(0f, 0f, 1f, 0.5f);
         Gizmos.DrawSphere(roamingState.lastPos, 6.0f);
@@ -53,9 +58,7 @@ public class EnemyState : NetworkBehaviour
             Gizmos.color = new Color(1.0f, 0.0f, 0.0f, 1.0f);     
             Gizmos.DrawSphere(wpt, 0.5f);
         }
-
-       
-    }
+    }*/
 
 
     public void ChangeState(IEnemyStates newState)
@@ -67,17 +70,15 @@ public class EnemyState : NetworkBehaviour
         _enemyState.Enter();
     }
 
-    public void SetStateFlag(EnemyStates newState)
-    {
-        Debug.Log($"[NPC] State flag set to {newState}");
-        _currentState = newState;
-    }
-
     private void Update()
     {
         _enemyState.Update();
     }
 
+    public void ForceChaseState()
+    {
+        ChangeState(chaseState);
+    }
 
 
 
