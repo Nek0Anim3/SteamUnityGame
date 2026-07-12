@@ -6,8 +6,8 @@ namespace Enemy.States
     {
         private EnemyState stateMachine;
         private EnemyContext _context;
-        
-        //brbrbrpatapim
+        public float SearchTime = 10.0f;
+
         public E_ChaseState(EnemyState machine, EnemyContext ctx)
         {
             stateMachine = machine;
@@ -16,14 +16,15 @@ namespace Enemy.States
 
         public void Enter()
         {
-            Debug.Log("[NPC] ENTERED CHASE STATE!");
+            stateMachine.ChaseStartUpdate();
         }
-
+        
         public void Exit()
         {
-            
+            stateMachine.roamingState.lastPos = _context.EnemyMovement.transform.position;
+            stateMachine.StopChaseUpdate();
         }
-
+        
         public void Update()
         {
             

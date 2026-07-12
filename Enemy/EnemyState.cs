@@ -1,3 +1,4 @@
+using System;
 using Enemy;
 using Enemy.States;
 using Unity.Netcode;
@@ -17,7 +18,7 @@ public class EnemyState : NetworkBehaviour
     private EnemyStates _currentState; 
     private IEnemyStates _enemyState;
 
-    private EnemyContext context;
+    private EnemyContext _context;
     
     
     public E_IdleState idleState { get; private set; }
@@ -29,12 +30,12 @@ public class EnemyState : NetworkBehaviour
     
     private void Awake()
     {
-        context = GetComponent<EnemyContext>();
+        _context = GetComponent<EnemyContext>();
         
         //States
-        idleState = new E_IdleState(this, context);
-        roamingState = new E_RoamingState(this, context);
-        chaseState = new E_ChaseState(this, context);
+        idleState = new E_IdleState(this, _context);
+        roamingState = new E_RoamingState(this, _context);
+        chaseState = new E_ChaseState(this, _context);
         
         _enemyState = idleState;
         
@@ -44,7 +45,6 @@ public class EnemyState : NetworkBehaviour
     {
         if (!IsServer) { enabled = false; }
         _enemyState.Enter();
-        context.EnemyRaycaster.OnPlayerRaycastVisible += ForceChaseState;
     }
     
     //DEBUG NPC ROAMING SPHERE DRAWS
@@ -70,18 +70,56 @@ public class EnemyState : NetworkBehaviour
         _enemyState.Enter();
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
+        if (_context.EnemyRaycaster.playerInSight && _enemyState != chaseState)
+        {
+            ForceChaseState();
+        }
         _enemyState.Update();
     }
 
+    
+    //CHASE STATE WRAP
     public void ForceChaseState()
     {
         ChangeState(chaseState);
     }
 
+    public void ChaseStartUpdate()
+    {
+        InvokeRepeating(nameof(UpdateChasePos), 0, 0.2f);
+    }
+
+    public void StopChaseUpdate()
+    {
+        CancelInvoke(nameof(UpdateChasePos));
+    }
 
 
+    private void UpdateChasePos()
+    {
+        if (_context.EnemyRaycaster.playerInSight)
+        {
+            /*Debug.Log($"[NPC] Chase at {_context.transform.position}");*/
+            
+            _context.EnemyMovement.SetNewWaypoint(_context.EnemyRaycaster.NearestPlayer.transform.position);
+        }
+        else
+        {
+            if (_context.EnemyMovement.isMoving) return;
+            if (chaseState.SearchTime > 0.0f)
+            {
+                Debug.Log("Search time left: " + chaseState.SearchTime);
+                chaseState.SearchTime -= 0.2f;
+            }
+            else
+            {
+                ChangeState(roamingState);
+                chaseState.SearchTime = 10.0f; //magic num thats crap
+            }
+        }
+    }
     
 
 }

@@ -1,21 +1,34 @@
 ﻿using System;
+using System.Collections.Generic;
+using NUnit.Framework;
 using UnityEngine;
 
 namespace Enemy
 {
     public class EnemyRaycaster : MonoBehaviour
     {
-        public event Action OnPlayerRaycastVisible;
-        public Vector3 TargetPosition { get; private set; }
-        private bool isActive;
+        [SerializeField] private LayerMask wallLayerMask; 
+        private Vector3 minPlayerPos;
+        public Collider NearestPlayer;
+        public bool playerInSight;
+        private List<Collider> playerCollider;
+
+        private void Awake()
+        {
+            playerCollider = new List<Collider>();
+        }
         
-        private Collider playerCollider;
         private void OnTriggerEnter(Collider other)
         {
-            if (other.CompareTag("Player"))
+            if (other.CompareTag("Player")) 
             {
-                isActive = true;
-                playerCollider = other;
+                if (!playerCollider.Contains(other))
+                {
+                    Debug.Log("Player added to List<Collision>");
+                    playerCollider.Add(other);
+                    minPlayerPos = other.transform.position;
+                }
+                
             }
         }
 
@@ -23,26 +36,44 @@ namespace Enemy
         {
             if (other.CompareTag("Player"))
             {
-                isActive = false;
+                playerCollider.Remove(other);
             }
         }
 
         private void FixedUpdate()
         {
-            if (!isActive) return;
-            TargetPosition = playerCollider.transform.position;
-            
-            if (Physics.Raycast(new Vector3(transform.position.x, transform.position.y, transform.position.z + 0.5f), TargetPosition - transform.position, out RaycastHit hit)) 
+            foreach (Collider player in playerCollider)
+            {
+                if (Vector3.Distance(player.transform.position, transform.position) < Vector3.Distance(minPlayerPos, transform.position))
+                {
+                    minPlayerPos = player.transform.position;
+                    NearestPlayer = player;    
+                }
+            }
+
+            if (NearestPlayer != null)
+            {
+                RaycastPlayerPos();
+            }
+        }
+
+        public void RaycastPlayerPos()
+        {
+            //TODO Fix raycast hit, doesnt detect player
+            if (Physics.Raycast(new Vector3(transform.position.x, transform.position.y + 0.5f, transform.position.z), NearestPlayer.transform.position - transform.position, out RaycastHit hit, 20.0f,wallLayerMask)) 
             {
                 Debug.DrawLine(transform.position, hit.point, Color.green);
                 if (hit.collider.CompareTag("Player"))
                 {
-                    Debug.Log("[NPC] Raycast has LOS with player!");
-                    OnPlayerRaycastVisible?.Invoke();
-                    isActive = false;
+                    if (playerInSight == false) { playerInSight = true; }
+                    
                 }
             }
-
+            else
+            {
+                Debug.DrawLine(new Vector3(transform.position.x, transform.position.y + 0.5f, transform.position.z), NearestPlayer.transform.position - transform.position, Color.red);
+                playerInSight = false;
+            }
         }
     }
 }
