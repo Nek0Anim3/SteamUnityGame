@@ -26,6 +26,7 @@ namespace Enemy
                 {
                     Debug.Log("Player added to List<Collision>");
                     playerCollider.Add(other);
+                    NearestPlayer = other;
                     minPlayerPos = other.transform.position;
                 }
                 
@@ -42,37 +43,40 @@ namespace Enemy
 
         private void FixedUpdate()
         {
-            foreach (Collider player in playerCollider)
+            if (playerCollider.Count > 1)
             {
-                if (Vector3.Distance(player.transform.position, transform.position) < Vector3.Distance(minPlayerPos, transform.position))
+                float minDist = float.MaxValue;
+
+                foreach (Collider player in playerCollider)
                 {
-                    minPlayerPos = player.transform.position;
-                    NearestPlayer = player;    
+                    float dist = Vector3.Distance(player.transform.position, transform.position);
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        minPlayerPos = player.transform.position;
+                        NearestPlayer = player;
+                    }
                 }
             }
 
-            if (NearestPlayer != null)
-            {
-                RaycastPlayerPos();
-            }
+            if (NearestPlayer != null) RaycastPlayerPos();
         }
 
         public void RaycastPlayerPos()
         {
-            //TODO Fix raycast hit, doesnt detect player
-            if (Physics.Raycast(new Vector3(transform.position.x, transform.position.y + 0.5f, transform.position.z), NearestPlayer.transform.position - transform.position, out RaycastHit hit, 20.0f,wallLayerMask)) 
+            Vector3 origin = transform.position + Vector3.up * 0.5f;
+            Vector3 direction = NearestPlayer.transform.position - origin;
+            if (Physics.Raycast(origin, direction, out RaycastHit hit, Vector3.Distance(origin, NearestPlayer.transform.position), wallLayerMask))
             {
-                Debug.DrawLine(transform.position, hit.point, Color.green);
-                if (hit.collider.CompareTag("Player"))
-                {
-                    if (playerInSight == false) { playerInSight = true; }
-                    
-                }
+                Debug.DrawLine(origin, hit.point, Color.red);
+                playerInSight = false;
+                NearestPlayer = null;
+                
             }
             else
             {
-                Debug.DrawLine(new Vector3(transform.position.x, transform.position.y + 0.5f, transform.position.z), NearestPlayer.transform.position - transform.position, Color.red);
-                playerInSight = false;
+                Debug.DrawLine(origin, NearestPlayer.transform.position, Color.green);
+                playerInSight = true;
             }
         }
     }

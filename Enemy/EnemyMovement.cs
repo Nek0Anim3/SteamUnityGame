@@ -38,12 +38,9 @@ public class EnemyMovement : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (Vector3.Distance(transform.position, currentWpt) < 1.0f)
+        if (Vector3.Distance(transform.position, currentWpt) < 2.0f)
         {
-            if (isMoving)
-            {
-                isMoving = false;
-            }
+            isMoving = false;
         }
     }
 }
