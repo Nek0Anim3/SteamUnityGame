@@ -4,7 +4,7 @@ public class SettingsGraphicsDebug : MonoBehaviour
 {
     private static SettingsGraphicsDebug Instance;
 
-    private readonly int VIDEO_FPS = 60;
+    private readonly int VIDEO_FPS = 90;
     private readonly int VIDEO_VSYNC = 1;
     void Awake()
     {

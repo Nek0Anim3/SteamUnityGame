@@ -41,18 +41,20 @@ public class PlayerStamina : NetworkBehaviour
 
     private void StartSprinting(InputAction.CallbackContext obj)
     {
-        if (!isExhausted && _playerController.isMoving)
+        if (!isExhausted && !_playerController.inCrouch && _playerController.isMoving)
         {
             isFull = false;
             OnSprintStart?.Invoke();
 
             _playerController.moveMultiplier = 1.5f;
             isSprinting = true;    
-        } 
+        }
+
     }
 
     private void StopSprinting(InputAction.CallbackContext obj)
     {
+
         _playerController.moveMultiplier = 1.0f;
         isSprinting = false;
     }
