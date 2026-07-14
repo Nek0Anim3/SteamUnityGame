@@ -116,7 +116,7 @@ public class EnemyState : NetworkBehaviour
             else
             {
                 ChangeState(roamingState);
-                chaseState.SearchTime = 10.0f; //magic num thats crap
+                chaseState.SearchTime = chaseState.SEARCH_BASE_TIME; 
             }
         }
     }

@@ -6,12 +6,14 @@ namespace Enemy.States
     {
         private EnemyState stateMachine;
         private EnemyContext _context;
-        public float SearchTime = 10.0f;
+        public readonly float SEARCH_BASE_TIME = 5.0f;
+        public float SearchTime;
 
         public E_ChaseState(EnemyState machine, EnemyContext ctx)
         {
             stateMachine = machine;
             _context = ctx;
+            SearchTime = SEARCH_BASE_TIME;
         }
 
         public void Enter()
