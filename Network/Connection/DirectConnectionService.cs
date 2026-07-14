@@ -51,7 +51,7 @@ namespace Network
                 UnityEngine.Debug.LogWarning("Failed to start hosting");
                 return;
             }
-            MenuManager.Instance.ChangeMenuPage(2);
+            /*MenuManager.Instance.ChangeMenuPage(2);*/
             UnityEngine.Debug.Log("Host started!!");
         }
 
