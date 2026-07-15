@@ -9,10 +9,11 @@ namespace Enemy
     {
         [SerializeField] private LayerMask wallLayerMask; 
         private Vector3 minPlayerPos;
+       
         public Collider NearestPlayer;
         public bool playerInSight;
         private List<Collider> playerCollider;
-
+    
         private void Awake()
         {
             playerCollider = new List<Collider>();

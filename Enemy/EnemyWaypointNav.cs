@@ -10,21 +10,20 @@ public class EnemyWaypointNav : MonoBehaviour
 
     private EnemyMovement NPC_Movement;
     [SerializeField] private WaypointData NAV_waypointData;
+    [SerializeField] [Range(6.0f, 15.0f)] private float SearchRadius;
     public WaypointData Data => NAV_waypointData;
-    private Dictionary<string, NavWaypoint> VisitedWaypoints;
     private Vector3 currentWaypoint;
 
     
     private void Awake()
     {
         NPC_Movement = GetComponent<EnemyMovement>();
-        currentWaypoint = NAV_waypointData.SelectNextRandomPoint(NPC_Movement.transform.position, 3.0f).position;
-        VisitedWaypoints = new Dictionary<string, NavWaypoint>();
+        currentWaypoint = NAV_waypointData.SelectNextRandomPoint(NPC_Movement.transform.position, SearchRadius).position;
     }
 
     public void SetNewDestination(Vector3 searchPosition)
     {
-        NavWaypoint waypoint = NAV_waypointData.SelectNextRandomPoint(searchPosition, 6.0f);
+        NavWaypoint waypoint = NAV_waypointData.SelectNextRandomPoint(searchPosition, SearchRadius);
         NPC_Movement.SetNewWaypoint(waypoint.position);
         currentWaypoint = waypoint.position;
     }

@@ -20,7 +20,10 @@ namespace Enemy.States
         public void Enter()
         {
             isActive = true;
-            timer = idleTimer;
+            timer = _context.EnemyMovement.DistanceToPoint / idleTimer;
+            Debug.Log($"DISTANCE TO POINT = {_context.EnemyMovement.DistanceToPoint}");
+            Debug.Log($"IDLE TIMER = {timer}");
+            
         }
 
         public void Exit()

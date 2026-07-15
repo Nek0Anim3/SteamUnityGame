@@ -9,6 +9,7 @@ public class EnemyMovement : NetworkBehaviour
     private NavMeshAgent navAgent;
     //debug waypoint
     private Vector3 currentWpt;
+    public float DistanceToPoint { get; private set; }
     public bool isMoving = false;
     private void Awake()
     {
@@ -20,6 +21,7 @@ public class EnemyMovement : NetworkBehaviour
     {
         if (!IsServer) { enabled = false; }
         navAgent = GetComponent<NavMeshAgent>();
+        DistanceToPoint = 5.0f;
 
     }
 
@@ -28,6 +30,7 @@ public class EnemyMovement : NetworkBehaviour
     {
         if (navAgent.SetDestination(destination))
         {
+            DistanceToPoint = Vector3.Distance(transform.position, destination);
             currentWpt = destination;
             if (!isMoving)
             {
