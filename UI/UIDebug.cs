@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -14,7 +15,8 @@ namespace UI
         [SerializeField] private CanvasGroup DebugCanvas;
         public InputActionAsset inputAsset;
         private InputAction debugToggle;
-        
+
+        private readonly StringBuilder _sb = new StringBuilder(512);
         //Enemy
         public float ENEMY_DIST_TO_PLAYER;
         public float ENEMY_SPEED;
@@ -34,8 +36,9 @@ namespace UI
             debugToggle = inputAsset.FindActionMap("Player").FindAction("Debug");
             Instance = this;
             DontDestroyOnLoad(gameObject);
-
+            
             debugToggle.started += ToggleUI;
+            
         }
 
         private void Start()
@@ -61,7 +64,20 @@ namespace UI
             {
                 return;
             }
-            mainText.text = $"Debug Menu [F1]\n\nEnemy:\nDistance to ply: {ENEMY_DIST_TO_PLAYER.ToString("F")}\nMovespeed: {ENEMY_SPEED.ToString("F1")}\nIdle Timer: {ENEMY_IDLE_TIME.ToString("F1")}\nCurrent state: {ENEMY_STATE}\n\nPlayer:\nSpeed: {MOVESPEED.ToString("F1")}\nStamina: {SPRINT_VAL.ToString("F1")}\nIn Crouch?: {IN_CROUCH}\nIs Sprint?: {IS_SPRINTING}";
+            _sb.Clear();
+            _sb.AppendLine("Debug Menu [F1]\n");
+            _sb.AppendLine("Enemy:");
+            _sb.Append("Distance to ply: ").AppendFormat("{0:F2}\n", ENEMY_DIST_TO_PLAYER);
+            _sb.Append("Movespeed: ").AppendFormat("{0:F1}\n", ENEMY_SPEED);
+            _sb.Append("Idle Timer: ").AppendFormat("{0:F1}\n", ENEMY_IDLE_TIME);
+            _sb.Append("Current state: ").AppendLine(ENEMY_STATE.ToString());
+            _sb.AppendLine("\nPlayer:");
+            _sb.Append("Speed: ").AppendFormat("{0:F1}\n", MOVESPEED);
+            _sb.Append("Stamina: ").AppendFormat("{0:F1}\n", SPRINT_VAL);
+            _sb.Append("In Crouch?: ").AppendLine(IN_CROUCH.ToString());
+            _sb.Append("Is Sprint?: ").AppendLine(IS_SPRINTING.ToString());
+
+            mainText.SetText(_sb);
         }  
       
         
