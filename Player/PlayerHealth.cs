@@ -1,13 +1,12 @@
+using Player;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerHealth : NetworkBehaviour
+public class PlayerHealth : NetworkBehaviour, IDamageable
 {
     public NetworkVariable<float> playerHealth = new NetworkVariable<float>(100.0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-    
-    [SerializeField] private TMP_Text healthText;
-    
+     
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
@@ -23,22 +22,22 @@ public class PlayerHealth : NetworkBehaviour
     private void OnHealthChanged(float oldVal, float newVal)
     {
         Debug.Log($"Client hp changed to -> {newVal}");
-        healthText.text = newVal.ToString("F0");
     }
 
-    public void TakeDamage(float amount)
+    public void TakeDamage(float damage)
     {
         if (IsServer) 
         {
-            playerHealth.Value -= amount;
+            playerHealth.Value -= damage;
             return;
         }
-        TakeDamageServerRpc(amount); 
+        TakeDamageServerRpc(damage); 
     }
     
     [ServerRpc]
-    public void TakeDamageServerRpc(float amount)
+    private void TakeDamageServerRpc(float amount)
     {
+        Debug.Log($"Player taken damage -> IN AMOUNT: {amount}");
         playerHealth.Value -= amount;
     }
 }

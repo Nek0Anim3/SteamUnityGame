@@ -1,6 +1,7 @@
 using System;
 using Enemy;
 using Enemy.States;
+using UI;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -20,23 +21,27 @@ public class EnemyState : NetworkBehaviour
 
     private EnemyContext _context;
     
-    
+    //States
     public E_IdleState idleState { get; private set; }
     public E_RoamingState roamingState { get; private set; }
     public E_ChaseState chaseState { get; private set; }
-
+    public E_AttackState attackState { get; private set; }
+    
     private float timerSeconds;
     private bool isTimerRunning;
-    
+    private float distanceToPlayer;
+    private const float ATTACK_DISTANCE = 1.8f;
     private void Awake()
     {
         _context = GetComponent<EnemyContext>();
         
-        //States
+        //STATES
+        //==========================
         idleState = new E_IdleState(this, _context);
         roamingState = new E_RoamingState(this, _context);
         chaseState = new E_ChaseState(this, _context);
-        
+        attackState = new E_AttackState(this, _context);
+        //==========================
         _enemyState = idleState;
         
     }
@@ -46,20 +51,6 @@ public class EnemyState : NetworkBehaviour
         if (!IsServer) { enabled = false; }
         _enemyState.Enter();
     }
-    
-    //DEBUG NPC ROAMING SPHERE DRAWS
-    /*private void OnDrawGizmos()
-    {
-        Gizmos.color = new Color(0f, 0f, 1f, 0.5f);
-        Gizmos.DrawSphere(roamingState.lastPos, 6.0f);
-
-        foreach (var wpt in roamingState.visitedPoints_DEBUG)
-        {
-            Gizmos.color = new Color(1.0f, 0.0f, 0.0f, 1.0f);     
-            Gizmos.DrawSphere(wpt, 0.5f);
-        }
-    }*/
-
 
     public void ChangeState(IEnemyStates newState)
     {
@@ -72,7 +63,7 @@ public class EnemyState : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (_context.EnemyRaycaster.playerInSight && _enemyState != chaseState)
+        if (_context.EnemyRaycaster.playerInSight && _enemyState != chaseState && _enemyState != attackState)
         {
             ForceChaseState();
         }
@@ -102,8 +93,19 @@ public class EnemyState : NetworkBehaviour
         if (_context.EnemyRaycaster.playerInSight)
         {
             /*Debug.Log($"[NPC] Chase at {_context.transform.position}");*/
-            
+            if (_context.EnemyRaycaster.NearestPlayer != null)
+            {
+                distanceToPlayer = Vector3.Distance(_context.transform.position, _context.EnemyRaycaster.NearestPlayer.transform.position);
+                //===========
+                //DEBUG
+                //===========
+                UIDebug.Instance.UpdateUI(distanceToPlayer);
+            }
             _context.EnemyMovement.SetNewWaypoint(_context.EnemyRaycaster.NearestPlayer.transform.position);
+            if (distanceToPlayer <= ATTACK_DISTANCE && _enemyState != attackState)
+            {
+                ChangeState(attackState);
+            }
         }
         else
         {
