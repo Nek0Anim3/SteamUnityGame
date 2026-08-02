@@ -7,9 +7,8 @@ namespace UI
     public class UIDebug : MonoBehaviour
     {
         public static UIDebug Instance;
-        
-        [SerializeField] private TMP_Text mouseX;
-        [SerializeField] private TMP_Text mouseY;
+
+        [SerializeField] private TMP_Text distance;
         
         private void Awake()
         {
@@ -19,10 +18,9 @@ namespace UI
             DontDestroyOnLoad(gameObject);
         }
 
-        public void UpdateUI(Vector2 mousePos)
+        public void UpdateUI(float distance)
         {
-            mouseX.text = $"Mouse X: {Math.Round(mousePos.x, 2)}";
-            mouseY.text = $"Mouse Y: {Math.Round(mousePos.y, 2)}";
+            this.distance.text = $"Distance to player: {distance}";
         }  
       
         

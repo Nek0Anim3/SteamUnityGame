@@ -8,7 +8,7 @@ public class DebugVersionUI : MonoBehaviour
 
     private void Awake()
     {
-        text = Application.productName + " v" + Application.version + "-dev (July 2026)";
+        text = Application.productName + " v" + Application.version + "-dev (Aug 2026)";
     }
 
     private void Start()
