@@ -1,4 +1,5 @@
 using Enemy;
+using UI;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
@@ -41,6 +42,11 @@ public class EnemyMovement : NetworkBehaviour
 
     private void FixedUpdate()
     {
+        //===========
+        // UI DEBUG
+        UIDebug.Instance.ENEMY_SPEED = navAgent.speed;
+        //==========
+        
         if (Vector3.Distance(transform.position, currentWpt) < 2.0f)
         {
             isMoving = false;

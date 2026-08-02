@@ -1,6 +1,6 @@
 using System;
 using Player.PlayerMovement;
-
+using UI;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -41,22 +41,29 @@ public class PlayerStamina : NetworkBehaviour
 
     private void StartSprinting(InputAction.CallbackContext obj)
     {
-        if (!isExhausted && !_playerController.inCrouch && _playerController.isMoving)
+        if (_playerController.inCrouch) return;
+        if (!isExhausted && _playerController.isMoving)
         {
             isFull = false;
             OnSprintStart?.Invoke();
 
             _playerController.moveMultiplier = 1.5f;
-            isSprinting = true;    
+            isSprinting = true;
+            //======
+            // UI DEBUG
+            UIDebug.Instance.IS_SPRINTING = isSprinting.ToString();
         }
 
     }
 
     private void StopSprinting(InputAction.CallbackContext obj)
     {
-
+        if (_playerController.inCrouch) { return; }
         _playerController.moveMultiplier = 1.0f;
         isSprinting = false;
+        //======
+        // UI DEBUG
+        UIDebug.Instance.IS_SPRINTING = isSprinting.ToString();
     }
 
     private void Update()
@@ -78,6 +85,7 @@ public class PlayerStamina : NetworkBehaviour
                 isSprinting = false;
                 _playerController.moveMultiplier = 1f;
             }
+
         }
         else
         {
@@ -99,6 +107,10 @@ public class PlayerStamina : NetworkBehaviour
             }
                 
         }
+        //========
+        // UI DEBUG
+        UIDebug.Instance.SPRINT_VAL = (float)Stamina / StaminaMax;
+        //========
         OnStaminaChange?.Invoke((float)Stamina / StaminaMax);
     }
 }

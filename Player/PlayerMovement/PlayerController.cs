@@ -1,3 +1,4 @@
+using UI;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -110,11 +111,13 @@ namespace Player.PlayerMovement
             jumpRequested = true;
         }
 
-        
-        //TODO фикс сдвига и спам улетаю в небо
         private void OnStartCrouch(InputAction.CallbackContext ctx)
         {
             inCrouch = true;
+            //========
+            // UI DEBUG
+            UIDebug.Instance.IN_CROUCH = inCrouch.ToString();
+            //========
             moveMultiplier = 0.6f;
             float offset = transform.position.y * ((0.6f / 1.0f) - 1.0f) / 2.0f;
             
@@ -126,6 +129,10 @@ namespace Player.PlayerMovement
         private void OnEndCrouch(InputAction.CallbackContext ctx)
         {
             inCrouch = false;
+            //========
+            // UI DEBUG
+            UIDebug.Instance.IN_CROUCH = inCrouch.ToString();
+            //========
             moveMultiplier = 1.0f;
             rb.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
             playerCollider.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
@@ -179,7 +186,10 @@ namespace Player.PlayerMovement
             );
 
             rb.linearVelocity = new Vector3(_smoothedMoveDirection.x, verticalVelocity, _smoothedMoveDirection.z);
-
+            //========
+            // UI DEBUG
+            UIDebug.Instance.MOVESPEED = rb.linearVelocity.magnitude - 2.2f;
+            //========
         }
         
         private void HandleGravityAndGround()

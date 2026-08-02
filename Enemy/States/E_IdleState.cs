@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UI;
+using UnityEngine;
 
 namespace Enemy.States
 {
@@ -21,8 +22,8 @@ namespace Enemy.States
         {
             isActive = true;
             timer = _context.EnemyMovement.DistanceToPoint / idleTimer;
-            Debug.Log($"DISTANCE TO POINT = {_context.EnemyMovement.DistanceToPoint}");
-            Debug.Log($"IDLE TIMER = {timer}");
+            Debug.Log($"[NAV] DISTANCE TO POINT = {_context.EnemyMovement.DistanceToPoint}");
+            Debug.Log($"[NPC] IDLE TIMER = {timer}");
             
         }
 
@@ -37,10 +38,18 @@ namespace Enemy.States
 
             if (timer > 0.0f)
             {
+                //=====
+                // UI DEBUG
+                UIDebug.Instance.ENEMY_IDLE_TIME = timer;
+                //======
                 timer -= Time.deltaTime;
             }
             else
             {
+                //=====
+                // UI DEBUG
+                UIDebug.Instance.ENEMY_IDLE_TIME = 0.0f;
+                //======
                 stateMachine.ChangeState(stateMachine.roamingState);
             }
         }
