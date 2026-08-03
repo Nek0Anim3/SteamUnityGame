@@ -28,8 +28,8 @@ namespace Player.PlayerMovement
         [SerializeField] [Range(1.0f, 20.0f)] private float maxSpeed;
         [SerializeField] private float moveSpeed = 4.6f;
         public float moveMultiplier = 1.0f;
-        [SerializeField] private float jumpHeight = 2f;
-        [SerializeField] private float gravity = -9.81f;
+        [SerializeField] private float jumpHeight = 1f;
+        [SerializeField] private float gravity = -12.81f;
         [SerializeField] private float accelerationTime = 0.1f; 
         [SerializeField] private float decelerationTime = 0.15f; 
 
