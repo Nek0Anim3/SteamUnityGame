@@ -30,7 +30,7 @@ public class EnemyState : NetworkBehaviour
     private float timerSeconds;
     private bool isTimerRunning;
     private float distanceToPlayer;
-    private const float ATTACK_DISTANCE = 1.8f;
+    public readonly float ATTACK_DISTANCE = 1.8f;
     private void Awake()
     {
         _context = GetComponent<EnemyContext>();
