@@ -9,6 +9,7 @@ public class HUDItemRaycaster : MonoBehaviour
     private RaycastHit[] _hitResults = new RaycastHit[1];
     
     public event Action<(string, string, Sprite)> OnItemVisible;
+    public event Action<Vector3, Camera> OnItemPositionGet;
     public event Action OnItemDisappeared;
     private bool isVisible;
     void LateUpdate()
@@ -19,8 +20,9 @@ public class HUDItemRaycaster : MonoBehaviour
         if (Physics.SphereCastNonAlloc(ray, 0.18f, _hitResults, _rayDistance, interactableLayer, QueryTriggerInteraction.Collide) > 0)
         {
             if (isVisible) return;
-            OnItemVisible?.Invoke(_hitResults[0].collider.GetComponent<ItemScript>().GetItemData());
-
+            ItemScript itemScript = _hitResults[0].collider.GetComponent<ItemScript>();
+            OnItemVisible?.Invoke(itemScript.GetItemData());
+            /*OnItemPositionGet?.Invoke(itemScript.GetUIAnchor().position, playerCam);*/
             isVisible = true;
         }
         else
@@ -29,5 +31,6 @@ public class HUDItemRaycaster : MonoBehaviour
             OnItemDisappeared?.Invoke();
             isVisible = false;
         }
+        
     }
 }

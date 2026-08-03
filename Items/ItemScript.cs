@@ -5,6 +5,7 @@ public class ItemScript : MonoBehaviour
 {
     [SerializeField] private ItemBase itemData;
     private ValueTuple<string, string, Sprite> itemInfo;
+    [SerializeField] private Transform UIAnchor;
     
     private void Awake()
     {
@@ -15,5 +16,10 @@ public class ItemScript : MonoBehaviour
     public ValueTuple<string, string, Sprite> GetItemData()
     {
         return itemInfo;
+    }
+
+    public Transform GetUIAnchor()
+    {
+        return UIAnchor;
     }
 }
