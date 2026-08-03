@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class HUDInitializer : NetworkBehaviour
 {
-    
     [SerializeField] private GameObject HUDPrefab;
     [SerializeField] private PlayerStamina playerStamina;
+    [SerializeField] private HUDItemRaycaster _itemRaycaster;
     private GameObject hudInstance;
     private HUD_Stamina hudStamina;
     private HUDAnimationManager HUDAnimation;
@@ -15,6 +15,8 @@ public class HUDInitializer : NetworkBehaviour
     {
         if (!IsOwner) return;
         hudInstance = Instantiate(HUDPrefab);
+        UIItemHint itemHint = hudInstance.GetComponent<UIItemHint>();
+        itemHint.Init(_itemRaycaster);
         hudStamina = hudInstance.GetComponent<HUD_Stamina>();
         HUDAnimation = hudInstance.GetComponent<HUDAnimationManager>();
         hudStamina.playerStamina = playerStamina;
