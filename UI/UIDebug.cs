@@ -48,34 +48,29 @@ namespace UI
 
         private void ToggleUI(InputAction.CallbackContext context)
         {
-            if (DebugCanvas.alpha < 1.0)
-            {
-                DebugCanvas.DOFade(1.0f, 0.1f);
-            }
-            else
-            {
-                DebugCanvas.DOFade(0.0f, 0.1f);
-            }
+            if (DebugCanvas.alpha < 1.0) 
+            { DebugCanvas.DOFade(1.0f, 0.1f); }
+            
+            else 
+            { DebugCanvas.DOFade(0.0f, 0.1f); }
         }
         
         private void Update()
         {
-            if (DebugCanvas.alpha == 0.0f)
-            {
-                return;
-            }
+            if (DebugCanvas.alpha == 0.0f) { return; }
+            
             _sb.Clear();
             _sb.AppendLine("Debug Menu [F1]\n");
             _sb.AppendLine("Enemy:");
             _sb.Append("Distance to ply: ").AppendFormat("{0:F2}\n", ENEMY_DIST_TO_PLAYER);
             _sb.Append("Movespeed: ").AppendFormat("{0:F1}\n", ENEMY_SPEED);
             _sb.Append("Idle Timer: ").AppendFormat("{0:F1}\n", ENEMY_IDLE_TIME);
-            _sb.Append("Current state: ").AppendLine(ENEMY_STATE.ToString());
+            _sb.Append("Current state: ").AppendLine(ENEMY_STATE);
             _sb.AppendLine("\nPlayer:");
             _sb.Append("Speed: ").AppendFormat("{0:F1}\n", MOVESPEED);
             _sb.Append("Stamina: ").AppendFormat("{0:F1}\n", SPRINT_VAL);
-            _sb.Append("In Crouch?: ").AppendLine(IN_CROUCH.ToString());
-            _sb.Append("Is Sprint?: ").AppendLine(IS_SPRINTING.ToString());
+            _sb.Append("In Crouch?: ").AppendLine(IN_CROUCH);
+            _sb.Append("Is Sprint?: ").AppendLine(IS_SPRINTING);
 
             mainText.SetText(_sb);
         }  
