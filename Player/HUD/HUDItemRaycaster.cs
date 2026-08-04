@@ -31,7 +31,7 @@ public class HUDItemRaycaster : MonoBehaviour
                     _nearestObject = _hitResults[i];
                 }
             }
-            if (_currentObject.collider != null && _currentObject.collider == _nearestObject.collider) return;
+            if (_currentObject.collider != null && _currentObject.collider == _nearestObject.collider && isVisible) return;
             ItemScript itemScript = _nearestObject.collider.GetComponent<ItemScript>();
             OnItemVisible?.Invoke(itemScript.GetItemData());
             _currentObject = _nearestObject;
