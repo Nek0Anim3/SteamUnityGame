@@ -33,4 +33,9 @@ public class HUDInitializer : NetworkBehaviour
         playerStamina.OnSprintStart -= HUDAnimation.ShowSprintBar;
         playerStamina.OnSprintStop -= HUDAnimation.HideSprintBar;
     }
+    //methods to get smth from hud
+    public UICrosshair GetCrosshair()
+    {
+        return hudInstance.GetComponent<UICrosshair>();
+    }
 }

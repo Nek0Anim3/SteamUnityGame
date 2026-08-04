@@ -11,6 +11,9 @@ public class UIItemHint : MonoBehaviour
     private Vector2 itemPos;
     private Camera pCam;
     
+    //crosshair ref
+    [SerializeField] private UICrosshair crosshair;
+    
     [SerializeField] private CanvasGroup hudPanel;
     [SerializeField] private TMP_Text itemName;
     [SerializeField] private TMP_Text itemDescription;
@@ -54,6 +57,7 @@ public class UIItemHint : MonoBehaviour
     
     private void Show((string name, string description, Sprite sprite) itemInfo)
     {
+        crosshair.SetCrosshair(1);
         itemName.text = itemInfo.name;
         itemDescription.text = itemInfo.description;
         itemSprite.sprite = itemInfo.sprite;
@@ -62,6 +66,7 @@ public class UIItemHint : MonoBehaviour
     
     private void Hide()
     {
+        crosshair.SetCrosshair(0);
         hudPanel.DOFade(0.0f, 0.12f);
     }
 }

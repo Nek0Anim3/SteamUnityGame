@@ -8,8 +8,11 @@ namespace Player
 {
     public class PlayerItemGrabber : MonoBehaviour
     {
+        [SerializeField] private HUDInitializer HUDController;
+        private UICrosshair crosshair;
+        
         [SerializeField] Camera playerCam;
-
+        
         [SerializeField] private float _GRABRANGE;
         [SerializeField] private float _HOLDDIST;
         [SerializeField] private float _MIN_HOLDDIST;
@@ -40,6 +43,7 @@ namespace Player
 
         private void Start()
         {
+            crosshair = HUDController.GetCrosshair();
             _holdAction.Enable();
             _scrollAction.Enable();
             _holdAction.started += OnGrabInput;
@@ -81,12 +85,14 @@ namespace Player
         private void OnGrabInput(InputAction.CallbackContext ctx)
         {
             if (_heldItem != null) return;
+            crosshair.SetCrosshair(2);
             TryGrab();
         }
 
         private void OnReleaseInput(InputAction.CallbackContext ctx)
         {
             if (_heldItem == null) return;
+            crosshair.SetCrosshair(0);
             Release(drop: false);
         }
 
