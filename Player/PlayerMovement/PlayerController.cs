@@ -9,7 +9,8 @@ namespace Player.PlayerMovement
     public class PlayerController : NetworkBehaviour
     {
         private Transform playerTransform;
-        private Transform cameraTransform;
+        [SerializeField] private Transform orientation;   
+        [SerializeField] private Transform cameraHolder; 
         [SerializeField] private Camera playerCam;
         private Collider playerCollider;
 
@@ -59,10 +60,12 @@ namespace Player.PlayerMovement
         private void Awake()
         {
             inputAsset = Instantiate(inputAsset);
-            cameraTransform = playerCam.transform;
             playerTransform = GetComponent<Transform>();
             rb = GetComponent<Rigidbody>();
             playerCollider = GetComponent<Collider>();
+
+            rb.freezeRotation = true;
+            rb.interpolation = RigidbodyInterpolation.Interpolate; 
 
             moveAction = inputAsset.FindActionMap("Player").FindAction("Move");
             jumpAction = inputAsset.FindActionMap("Player").FindAction("Jump");
@@ -75,16 +78,13 @@ namespace Player.PlayerMovement
             if (IsOwner)
             {
                 rb.isKinematic = false; 
-                //Input
                 moveAction.Enable();
                 jumpAction.Enable();
                 crouchAction.Enable();
-                
-                //Sub input
+
                 jumpAction.performed += OnJump;
                 crouchAction.started += OnStartCrouch;
                 crouchAction.canceled += OnEndCrouch;
-                
                 
                 playerCam.gameObject.SetActive(true);
                 Cursor.lockState = CursorLockMode.Locked;
@@ -106,8 +106,8 @@ namespace Player.PlayerMovement
         private void OnJump(InputAction.CallbackContext ctx)
         {
             if (jumpRequested) return;
-            jumpForwardVec = transform.forward;
-            jumpRightVec = transform.right;
+            jumpForwardVec = orientation.forward;
+            jumpRightVec = orientation.right;
             jumpRequested = true;
         }
 
@@ -143,12 +143,12 @@ namespace Player.PlayerMovement
             Vector2 mouseDelta = Mouse.current.delta.ReadValue();
             float mouseX = mouseDelta.x * mouseSensitivity;
             float mouseY = mouseDelta.y * mouseSensitivity;
-        
+
             verticalRotation -= mouseY;
             verticalRotation = Mathf.Clamp(verticalRotation, -90f, 90f);
-            cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
-
-            playerTransform.Rotate(Vector3.up * mouseX);                
+            playerCam.transform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
+            orientation.Rotate(Vector3.up * mouseX);
+            cameraHolder.Rotate(Vector3.up * mouseX);                
         }
         
         void Update()
@@ -164,26 +164,18 @@ namespace Player.PlayerMovement
             Vector3 targetDirection;
             if (isGrounded)
             {
-                if (moveInput.magnitude > 0.0f) { isMoving = true; }
-                else { isMoving = false; }
+                isMoving = moveInput.magnitude > 0.0f;
                 moveInput = moveAction.ReadValue<Vector2>();
-                targetDirection = (transform.forward * moveInput.y + transform.right * moveInput.x)
-                    .normalized * (moveSpeed * moveMultiplier);
+                targetDirection = (orientation.forward * moveInput.y + orientation.right * moveInput.x).normalized * (moveSpeed * moveMultiplier);
             }
             else
             {
                 isMoving = false;
-                targetDirection = (jumpForwardVec * moveInput.y + jumpRightVec * moveInput.x)
-                    .normalized * moveSpeed;
+                targetDirection = (jumpForwardVec * moveInput.y + jumpRightVec * moveInput.x).normalized * moveSpeed;
             }
-            
+
             float smoothTime = moveInput.magnitude > 0.01f ? accelerationTime : decelerationTime;
-            _smoothedMoveDirection = Vector3.SmoothDamp(
-                _smoothedMoveDirection,
-                targetDirection,
-                ref _currentVelocity,
-                smoothTime
-            );
+            _smoothedMoveDirection = Vector3.SmoothDamp(_smoothedMoveDirection, targetDirection, ref _currentVelocity, smoothTime);
 
             rb.linearVelocity = new Vector3(_smoothedMoveDirection.x, verticalVelocity, _smoothedMoveDirection.z);
             //========
@@ -191,7 +183,7 @@ namespace Player.PlayerMovement
             UIDebug.Instance.MOVESPEED = rb.linearVelocity.magnitude - 2.2f;
             //========
         }
-        
+
         private void HandleGravityAndGround()
         {
             isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
