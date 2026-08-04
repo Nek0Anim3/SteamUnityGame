@@ -1,7 +1,12 @@
+using System.Numerics;
 using UI;
 using Unity.Netcode;
+using Unity.VisualScripting.Dependencies.NCalc;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Quaternion = UnityEngine.Quaternion;
+using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Player.PlayerMovement
 {
@@ -12,6 +17,8 @@ namespace Player.PlayerMovement
         [SerializeField] private Transform orientation;   
         [SerializeField] private Transform cameraHolder; 
         [SerializeField] private Camera playerCam;
+        [SerializeField] private Transform playerHead;
+        [SerializeField] private PlayerStamina playerStamina;
         private Collider playerCollider;
 
 
@@ -38,7 +45,9 @@ namespace Player.PlayerMovement
         private Vector3 _smoothedMoveDirection;
         private Vector3 jumpForwardVec;
         private Vector3 jumpRightVec;
-        
+
+        private Vector3 CROUCH_HEIGHT = new Vector3(1.0f, 0.6f, 1.0f);
+        private Vector3 STANDING_HEIGHT = new Vector3(1.0f, 1.0f, 1.0f);
         
         private Vector2 moveInput;
         private Vector2 lookInput;
@@ -47,7 +56,8 @@ namespace Player.PlayerMovement
         private bool isGrounded;
         private bool jumpRequested;
         public bool inCrouch { get; private set;  }
-
+        public bool canStandup { get; private set; }
+        public bool isStillInCrouch { get; private set; }
         public bool isMoving { get; private set; }
         
         [Header("Ground Check")]
@@ -113,17 +123,18 @@ namespace Player.PlayerMovement
 
         private void OnStartCrouch(InputAction.CallbackContext ctx)
         {
+            playerStamina.ForceStopSprint();
             inCrouch = true;
             //========
             // UI DEBUG
             UIDebug.Instance.IN_CROUCH = inCrouch.ToString();
             //========
             moveMultiplier = 0.6f;
-            float offset = transform.position.y * ((0.6f / 1.0f) - 1.0f) / 2.0f;
             
-            rb.transform.localScale = new Vector3(1.0f, 0.6f, 1.0f);
-            transform.position = new Vector3(transform.position.x, transform.position.y - offset, transform.position.z);
-            playerCollider.transform.localScale = new Vector3(1.0f, 0.6f, 1.0f);
+            
+            /*rb.transform.localScale = new Vector3(1.0f, 0.6f, 1.0f);*/
+            /*transform.position = new Vector3(transform.position.x, transform.position.y - offset, transform.position.z);*/
+
         }
 
         private void OnEndCrouch(InputAction.CallbackContext ctx)
@@ -133,9 +144,7 @@ namespace Player.PlayerMovement
             // UI DEBUG
             UIDebug.Instance.IN_CROUCH = inCrouch.ToString();
             //========
-            moveMultiplier = 1.0f;
-            rb.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-            playerCollider.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+            
         }
         
         private void RotateCamera()
@@ -155,6 +164,42 @@ namespace Player.PlayerMovement
         {
             if (!IsOwner) return;
             RotateCamera();
+            if (inCrouch)
+            {
+
+                if (playerCollider.transform.localScale == CROUCH_HEIGHT) return;
+                playerCollider.transform.localScale = Vector3.Lerp(playerCollider.transform.localScale, 
+                    CROUCH_HEIGHT, Time.deltaTime * 10.0f);
+            }
+            else
+            {
+                if (playerCollider.transform.localScale == CROUCH_HEIGHT) { isStillInCrouch = true; }
+                else { isStillInCrouch = false; }
+                if (playerCollider.transform.localScale == STANDING_HEIGHT) return;
+                Ray upRay = new Ray(playerHead.position, Vector3.up);
+                //TODO: Make SphereCastNonAlloc instead
+                if (Physics.Raycast(upRay, out RaycastHit hit, 1.0f))
+                {
+                    
+                    if (hit.distance < 0.4f)
+                    {
+                        canStandup = false;
+                    }
+                    else
+                    {
+                        canStandup = true;
+                    }
+                }
+                else
+                {
+                    canStandup = true;
+                }
+                if (!canStandup) return;
+                moveMultiplier = 1.0f;
+                playerCollider.transform.localScale = Vector3.Lerp(playerCollider.transform.localScale,
+                    STANDING_HEIGHT, Time.deltaTime * 10.0f);
+               
+            }
         }
       
         private void FixedUpdate()
