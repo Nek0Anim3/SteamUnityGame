@@ -85,7 +85,7 @@ namespace Player
         private void OnGrabInput(InputAction.CallbackContext ctx)
         {
             if (_heldItem != null) return;
-            crosshair.SetCrosshair(2);
+
             TryGrab();
         }
 
@@ -105,6 +105,7 @@ namespace Player
             _heldItem = grabbedItem;
             _HOLDDIST = Mathf.Clamp(hit.distance, _MIN_HOLDDIST, _MAX_HOLDDIST);
             _heldItem.OnGrab();
+            crosshair.SetCrosshair(2);
             _cameraVelocityHistory.Clear();
         }
         
