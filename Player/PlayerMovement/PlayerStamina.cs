@@ -17,7 +17,7 @@ public class PlayerStamina : NetworkBehaviour
     private InputAction shiftAction;
     public event Action<float> OnStaminaChange;
     private float StaminaNormalized;
-    private bool isSprinting;
+    public bool isSprinting { get; private set; }
     private bool isExhausted;
     private bool isFull;
     public event Action OnSprintStart;
@@ -41,13 +41,11 @@ public class PlayerStamina : NetworkBehaviour
 
     private void StartSprinting(InputAction.CallbackContext obj)
     {
-        if (_playerController.inCrouch || _playerController.isStillInCrouch || !_playerController.canStandup) return;
+        if (_playerController.crouchState == CrouchState.Crouching) return;
         if (!isExhausted && _playerController.isMoving)
         {
             isFull = false;
             OnSprintStart?.Invoke();
-
-            _playerController.moveMultiplier = 1.5f;
             isSprinting = true;
             //======
             // UI DEBUG
@@ -58,7 +56,6 @@ public class PlayerStamina : NetworkBehaviour
 
     private void StopSprinting(InputAction.CallbackContext obj)
     {
-        if (_playerController.inCrouch) { return; }
         _playerController.moveMultiplier = 1.0f;
         isSprinting = false;
         //======

@@ -8,6 +8,12 @@ using Quaternion = UnityEngine.Quaternion;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
+public enum CrouchState
+{
+    Standing,
+    Crouching
+}
+
 namespace Player.PlayerMovement
 {
     [RequireComponent(typeof(Rigidbody))]
@@ -20,6 +26,7 @@ namespace Player.PlayerMovement
         [SerializeField] private Transform playerHead;
         [SerializeField] private PlayerStamina playerStamina;
         private Collider playerCollider;
+        [SerializeField] private CapsuleCollider capsule;
 
 
         public InputActionAsset inputAsset;
@@ -46,18 +53,19 @@ namespace Player.PlayerMovement
         private Vector3 jumpForwardVec;
         private Vector3 jumpRightVec;
 
-        private Vector3 CROUCH_HEIGHT = new Vector3(1.0f, 0.6f, 1.0f);
-        private Vector3 STANDING_HEIGHT = new Vector3(1.0f, 1.0f, 1.0f);
-        
+        private float CROUCH_HEIGHT;
+        private float STANDING_HEIGHT;
+        private float CAM_CROUCH_HEIGHT;
+        private float CAM_STAND_HEIGHT;
+        public CrouchState crouchState {get; private set;}
+        private bool crouchInputHeld;
+        RaycastHit[] hitBuff = new RaycastHit[2];
         private Vector2 moveInput;
         private Vector2 lookInput;
         private float verticalVelocity;
         
         private bool isGrounded;
         private bool jumpRequested;
-        public bool inCrouch { get; private set;  }
-        public bool canStandup { get; private set; }
-        public bool isStillInCrouch { get; private set; }
         public bool isMoving { get; private set; }
         
         [Header("Ground Check")]
@@ -80,6 +88,11 @@ namespace Player.PlayerMovement
             moveAction = inputAsset.FindActionMap("Player").FindAction("Move");
             jumpAction = inputAsset.FindActionMap("Player").FindAction("Jump");
             crouchAction = inputAsset.FindActionMap("Player").FindAction("Crouch");
+
+            CROUCH_HEIGHT = capsule.height - 1.0f;
+            STANDING_HEIGHT = capsule.height;
+            CAM_STAND_HEIGHT = cameraHolder.transform.position.y;
+            CAM_CROUCH_HEIGHT = CAM_STAND_HEIGHT - 0.5f;
         }
 
 
@@ -87,6 +100,7 @@ namespace Player.PlayerMovement
         {
             if (IsOwner)
             {
+                
                 rb.isKinematic = false; 
                 moveAction.Enable();
                 jumpAction.Enable();
@@ -99,6 +113,7 @@ namespace Player.PlayerMovement
                 playerCam.gameObject.SetActive(true);
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
+                Debug.Log(cameraHolder.localPosition);
                 return;
             }
     
@@ -121,31 +136,8 @@ namespace Player.PlayerMovement
             jumpRequested = true;
         }
 
-        private void OnStartCrouch(InputAction.CallbackContext ctx)
-        {
-            playerStamina.ForceStopSprint();
-            inCrouch = true;
-            //========
-            // UI DEBUG
-            UIDebug.Instance.IN_CROUCH = inCrouch.ToString();
-            //========
-            moveMultiplier = 0.6f;
-            
-            
-            /*rb.transform.localScale = new Vector3(1.0f, 0.6f, 1.0f);*/
-            /*transform.position = new Vector3(transform.position.x, transform.position.y - offset, transform.position.z);*/
-
-        }
-
-        private void OnEndCrouch(InputAction.CallbackContext ctx)
-        {
-            inCrouch = false;
-            //========
-            // UI DEBUG
-            UIDebug.Instance.IN_CROUCH = inCrouch.ToString();
-            //========
-            
-        }
+        private void OnStartCrouch(InputAction.CallbackContext ctx) => crouchInputHeld = true;
+        private void OnEndCrouch(InputAction.CallbackContext ctx) => crouchInputHeld = false;
         
         private void RotateCamera()
         {
@@ -159,47 +151,48 @@ namespace Player.PlayerMovement
             orientation.Rotate(Vector3.up * mouseX);
             cameraHolder.Rotate(Vector3.up * mouseX);                
         }
+
+        private void UpdateCrouchState()
+        {
+            if (crouchInputHeld)
+            {
+                if (crouchState != CrouchState.Crouching)
+                {
+                    crouchState = CrouchState.Crouching;
+                    playerStamina.ForceStopSprint();
+                }
+            }
+            else if (crouchState == CrouchState.Crouching && CanStandup())
+            {
+                crouchState = CrouchState.Standing;
+            }
+            moveMultiplier = crouchState == CrouchState.Crouching ? 0.6f : (playerStamina.isSprinting ? 1.5f : 1.0f);
+            ApplyCrouch();
+        }
+
+        private void ApplyCrouch()
+        {
+            float targetHeight = crouchState == CrouchState.Crouching ? CROUCH_HEIGHT : STANDING_HEIGHT;
+            capsule.height = Mathf.Lerp(capsule.height, targetHeight, Time.deltaTime * 10.0f);
+        }
+        
+        private bool CanStandup()
+        {
+            Ray ray = new Ray(playerHead.transform.position, Vector3.up);
+
+            int hitCount = Physics.SphereCastNonAlloc(ray, 0.51f, hitBuff, 0.5f, groundMask);
+            if (hitCount > 0)
+            {
+                return false;
+            }
+            return true;
+        }
         
         void Update()
         {
             if (!IsOwner) return;
             RotateCamera();
-            if (inCrouch)
-            {
-
-                if (playerCollider.transform.localScale == CROUCH_HEIGHT) return;
-                playerCollider.transform.localScale = Vector3.Lerp(playerCollider.transform.localScale, 
-                    CROUCH_HEIGHT, Time.deltaTime * 10.0f);
-            }
-            else
-            {
-                if (playerCollider.transform.localScale == CROUCH_HEIGHT) { isStillInCrouch = true; }
-                else { isStillInCrouch = false; }
-                if (playerCollider.transform.localScale == STANDING_HEIGHT) return;
-                Ray upRay = new Ray(playerHead.position, Vector3.up);
-                //TODO: Make SphereCastNonAlloc instead
-                if (Physics.Raycast(upRay, out RaycastHit hit, 1.0f))
-                {
-                    
-                    if (hit.distance < 0.4f)
-                    {
-                        canStandup = false;
-                    }
-                    else
-                    {
-                        canStandup = true;
-                    }
-                }
-                else
-                {
-                    canStandup = true;
-                }
-                if (!canStandup) return;
-                moveMultiplier = 1.0f;
-                playerCollider.transform.localScale = Vector3.Lerp(playerCollider.transform.localScale,
-                    STANDING_HEIGHT, Time.deltaTime * 10.0f);
-               
-            }
+            UpdateCrouchState();
         }
       
         private void FixedUpdate()
