@@ -1,5 +1,5 @@
+using FishNet.Object;
 using Player.PlayerMovement;
-using Unity.Netcode;
 using UnityEngine;
 
 public class HUDInitializer : NetworkBehaviour
@@ -10,8 +10,8 @@ public class HUDInitializer : NetworkBehaviour
     private GameObject hudInstance;
     private HUD_Stamina hudStamina;
     private HUDAnimationManager HUDAnimation;
-    
-    public override void OnNetworkSpawn()
+
+    public override void OnStartClient()
     {
         if (!IsOwner) return;
         hudInstance = Instantiate(HUDPrefab);
@@ -28,7 +28,7 @@ public class HUDInitializer : NetworkBehaviour
         playerStamina.OnSprintStop += HUDAnimation.HideSprintBar;
     }
 
-    public override void OnNetworkDespawn()
+    public override void OnStopClient()
     {
         playerStamina.OnSprintStart -= HUDAnimation.ShowSprintBar;
         playerStamina.OnSprintStop -= HUDAnimation.HideSprintBar;
