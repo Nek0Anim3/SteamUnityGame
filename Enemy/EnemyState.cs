@@ -60,7 +60,7 @@ public class EnemyState : NetworkBehaviour
         _enemyState = newState;
         //=========
         // UI DEBUG
-        UIDebug.Instance.ENEMY_STATE = newState.ToString()[15..];
+        /*UIDebug.Instance.ENEMY_STATE = newState.ToString()[15..];*/
         //=========
         _enemyState.Enter();
     }
@@ -102,7 +102,7 @@ public class EnemyState : NetworkBehaviour
                 distanceToPlayer = Vector3.Distance(_context.transform.position, _context.EnemyRaycaster.NearestPlayer.transform.position);
                 //===========
                 // UI DEBUG
-                UIDebug.Instance.ENEMY_DIST_TO_PLAYER = distanceToPlayer;
+                /*UIDebug.Instance.ENEMY_DIST_TO_PLAYER = distanceToPlayer;*/
                 //===========
             }
             _context.EnemyMovement.SetNewWaypoint(_context.EnemyRaycaster.NearestPlayer.transform.position);
@@ -119,14 +119,14 @@ public class EnemyState : NetworkBehaviour
                 Debug.Log("Search time left: " + chaseState.SearchTime);
                 //======
                 // UI DEBUG
-                UIDebug.Instance.ENEMY_IDLE_TIME = chaseState.SearchTime;
+                /*UIDebug.Instance.ENEMY_IDLE_TIME = chaseState.SearchTime;*/
                 //======
                 chaseState.SearchTime -= 0.2f;
             }
             else
             {
                 ChangeState(roamingState);
-                UIDebug.Instance.ENEMY_IDLE_TIME = 0.0f;
+                /*UIDebug.Instance.ENEMY_IDLE_TIME = 0.0f;*/
                 chaseState.SearchTime = chaseState.SEARCH_BASE_TIME; 
             }
         }

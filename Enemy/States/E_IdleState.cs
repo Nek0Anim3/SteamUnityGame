@@ -40,7 +40,7 @@ namespace Enemy.States
             {
                 //=====
                 // UI DEBUG
-                UIDebug.Instance.ENEMY_IDLE_TIME = timer;
+                /*UIDebug.Instance.ENEMY_IDLE_TIME = timer;*/
                 //======
                 timer -= Time.deltaTime;
             }
@@ -48,7 +48,7 @@ namespace Enemy.States
             {
                 //=====
                 // UI DEBUG
-                UIDebug.Instance.ENEMY_IDLE_TIME = 0.0f;
+                /*UIDebug.Instance.ENEMY_IDLE_TIME = 0.0f;*/
                 //======
                 stateMachine.ChangeState(stateMachine.roamingState);
             }

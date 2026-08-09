@@ -44,7 +44,7 @@ public class EnemyMovement : NetworkBehaviour
     {
         //===========
         // UI DEBUG
-        UIDebug.Instance.ENEMY_SPEED = navAgent.speed;
+        /*UIDebug.Instance.ENEMY_SPEED = navAgent.speed;*/
         //==========
         
         if (Vector3.Distance(transform.position, currentWpt) < 2.0f)

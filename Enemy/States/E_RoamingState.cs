@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using TMPro.EditorUtilities;
 using UnityEngine;
 
 namespace Enemy.States
@@ -18,7 +17,7 @@ namespace Enemy.States
         //конструктор
         public E_RoamingState(EnemyState machine, EnemyContext ctx)
         {
-            UnityEngine.Debug.Log("[INIT] E_RoamingState created!");
+            Debug.Log("[INIT] E_RoamingState created!");
             stateMachine = machine;
             _context = ctx;
             lastPos = machine.transform.position;
