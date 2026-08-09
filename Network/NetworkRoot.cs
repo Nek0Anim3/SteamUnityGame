@@ -1,6 +1,6 @@
-﻿using Netcode.Transports.Facepunch;
-using Unity.Netcode;
-using Unity.Netcode.Transports.UTP;
+﻿
+using FishNet.Managing;
+using FishNet.Transporting;
 using UnityEngine;
 
 namespace Network
@@ -8,8 +8,8 @@ namespace Network
     public class NetworkRoot : MonoBehaviour
     {
         public NetworkManager NetworkManager;
-        public UnityTransport UnityTransport;
-        public FacepunchTransport FacepunchTransport;
+        public Transport Transport;
         public UINetBus UI;
+        public FishySteamworks.FishySteamworks SteamTransport;
     }
 }
