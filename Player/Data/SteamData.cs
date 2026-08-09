@@ -7,15 +7,15 @@ namespace Player
     {
         public void SetNickname(string nickname)
         {
-            if (!SteamClient.IsValid) { return; }
-            PlayerPrefs.Nickname = SteamClient.Name;
+            if (!SteamAPI.IsSteamRunning()) { return; }
+            PlayerPrefs.Nickname = SteamFriends.GetPersonaName();
             Debug.Log($"Client name: {PlayerPrefs.Nickname}");
         }
 
         public void SetUID(ulong uid)
         {
-            if (!SteamClient.IsValid) { return; }
-            PlayerPrefs.ClientID = SteamClient.SteamId;
+            if (!SteamAPI.IsSteamRunning()) { return; }
+            PlayerPrefs.ClientID = SteamUser.GetSteamID().m_SteamID;
             Debug.Log($"Client UID: {PlayerPrefs.ClientID}");
         }
     }
