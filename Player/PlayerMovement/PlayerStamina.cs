@@ -1,7 +1,7 @@
 using System;
+using FishNet.Object;
 using Player.PlayerMovement;
 using UI;
-using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -31,14 +31,24 @@ public class PlayerStamina : NetworkBehaviour
         shiftAction = inputActionAsset.FindActionMap("Player").FindAction("Sprint");
     }
 
-    public override void OnNetworkSpawn()
+    public override void OnStartClient()
     {
+        base.OnStartClient();
         if (!IsOwner) { return; }
         shiftAction.Enable();
         shiftAction.started += StartSprinting;
         shiftAction.canceled += StopSprinting;
     }
 
+    public override void OnStopClient()
+    {
+        if (!IsOwner) { return; }
+        shiftAction.Disable();
+        shiftAction.started -= StartSprinting;
+        shiftAction.canceled -= StopSprinting;
+        base.OnStopClient();
+    }
+    
     private void StartSprinting(InputAction.CallbackContext obj)
     {
         if (_playerController.crouchState == CrouchState.Crouching) return;
