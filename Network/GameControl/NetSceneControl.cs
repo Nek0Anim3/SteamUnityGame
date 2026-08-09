@@ -47,11 +47,14 @@ public class NetSceneControl : NetworkBehaviour
     private void OnSceneLoadComplete(string str, LoadSceneMode mode, List<ulong> clientsCompleted, List<ulong> clientsTimeout)
     {
         GameObject[] spawns =  GameObject.FindGameObjectsWithTag("Spawnpoint");
-
-        int spawnIndex = 0;
         
+        int spawnIndex = 0;
+        Debug.Log($"[SceneLoad] Completed: {clientsCompleted.Count}, Timeout: {clientsTimeout.Count}");
+        foreach (var id in clientsTimeout)
+            Debug.LogWarning($"[SceneLoad] Client {id} TIMED OUT");
         foreach (ulong clientId in clientsCompleted)
         {
+            
             Vector3 spawnPosition = Vector3.zero;
             Quaternion spawnRotation = Quaternion.identity;
 
