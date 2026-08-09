@@ -1,130 +1,175 @@
 ﻿using System.Threading.Tasks;
+using FishNet.Managing;
 using Steamworks;
-using Steamworks.Data;
 using UIManager.MainMenu;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Network
 {
     public class SteamConnectionService : INetConnectionService, INetPolling
     {
         private readonly NetworkRoot _root;
-        private Lobby _lobby;
-        
+        private readonly NetworkManager _nm;
+
+        private CSteamID _lobbyId = CSteamID.Nil;
+        private bool _steamInitialized;
         private bool _isDisconnecting;
+        private bool _isStartingHost; 
+
+        private Callback<GameLobbyJoinRequested_t> _gameLobbyJoinRequested;
+        private Callback<LobbyEnter_t> _lobbyEntered;
+        private Callback<LobbyChatUpdate_t> _lobbyChatUpdate;
+        private CallResult<LobbyCreated_t> _lobbyCreatedResult;
+
+        private TaskCompletionSource<bool> _createLobbyTcs;
+
         public SteamConnectionService(NetworkRoot root)
         {
-            if (!SteamClient.IsValid)
-            { 
-                SteamClient.Init(480);    
-            }
-            
             _root = root;
-            _root.NetworkManager.NetworkConfig.NetworkTransport = _root.FacepunchTransport;
-            
-            SteamFriends.OnGameLobbyJoinRequested += OnLobbyJoinRequested;
-            SteamMatchmaking.OnLobbyEntered += OnLobbyEntered;
-            SteamMatchmaking.OnLobbyMemberLeave += OnLobbyLeave;
+            _nm = _root.NetworkManager;
+
+            if (!_steamInitialized)
+                _steamInitialized = SteamAPI.Init();
+
+            _gameLobbyJoinRequested = Callback<GameLobbyJoinRequested_t>.Create(OnGameLobbyJoinRequested);
+            _lobbyEntered = Callback<LobbyEnter_t>.Create(OnLobbyEntered);
+            _lobbyChatUpdate = Callback<LobbyChatUpdate_t>.Create(OnLobbyChatUpdate);
+            _lobbyCreatedResult = CallResult<LobbyCreated_t>.Create(OnLobbyCreated);
+
             _root.UI.OnDisconnectRequested += Disconnect;
             _root.UI.OnHostRequested += Void_StartHosting;
         }
 
         public void Tick()
         {
-            SteamClient.RunCallbacks();
-        }
-
-        private void OnLobbyLeave(Lobby lobby, Friend friend)
-        {
-            if (friend.Id == lobby.Owner.Id)
-            {
-                if (_isDisconnecting) return; 
-                _isDisconnecting = true;
-            
-                _lobby.Leave();
-                _lobby = default;
-                _root.NetworkManager.Shutdown();
-                _isDisconnecting = false;
-                
-            }
+            if (_steamInitialized)
+                SteamAPI.RunCallbacks();
         }
 
         private async void Void_StartHosting()
         {
             bool success = await StartHosting();
             if (!success)
-            {
-                Debug.Log("Failed to start steam lobby"); 
-            }
+                Debug.Log("Failed to start steam lobby");
         }
-        
+
         public async Task<bool> StartHosting()
         {
-            if (!SteamClient.IsValid)
+            if (!_steamInitialized)
             {
-                SteamClient.Init(480);
+                _steamInitialized = SteamAPI.Init();
+                if (!_steamInitialized) return false;
             }
 
-            Lobby? lobby = await SteamMatchmaking.CreateLobbyAsync(4);
+            _isStartingHost = true;
+            _createLobbyTcs = new TaskCompletionSource<bool>();
 
-            if (!lobby.HasValue) return false;
+            SteamAPICall_t handle = SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypePublic, 4);
+            _lobbyCreatedResult.Set(handle);
 
-            _lobby = lobby.Value;
-            _lobby.SetPublic();
-            _lobby.SetJoinable(true);
-            
-            _root.NetworkManager.StartHost();
-            
-           
+            bool created = await _createLobbyTcs.Task;
+
+            if (!created)
+            {
+                _isStartingHost = false;
+                return false;
+            }
+
+            SteamMatchmaking.SetLobbyJoinable(_lobbyId, true);
+
+            _nm.ServerManager.StartConnection();
+            _nm.ClientManager.StartConnection();
+
+            _isStartingHost = false;
+
+            if (!_nm.IsServerStarted)
+            {
+                SteamMatchmaking.LeaveLobby(_lobbyId);
+                _lobbyId = CSteamID.Nil;
+                return false;
+            }
+
             return true;
+        }
+
+        private void OnLobbyCreated(LobbyCreated_t result, bool ioFailure)
+        {
+            if (ioFailure || result.m_eResult != EResult.k_EResultOK)
+            {
+                _createLobbyTcs?.TrySetResult(false);
+                return;
+            }
+
+            _lobbyId = new CSteamID(result.m_ulSteamIDLobby);
+            _createLobbyTcs?.TrySetResult(true);
         }
 
         public Task<bool> StartClientConnection()
         {
             return Task.FromResult(true);
         }
-
-        private async void OnLobbyJoinRequested(Lobby lobby, SteamId steamId)
+        private void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t data)
         {
-            await lobby.Join(); 
+            SteamMatchmaking.JoinLobby(data.m_steamIDLobby);
         }
-        
-        private void OnLobbyEntered(Lobby lobby)
+
+        private void OnLobbyEntered(LobbyEnter_t data)
         {
-            if (_root.NetworkManager.IsServer) return;
-            _root.FacepunchTransport.targetSteamId = lobby.Owner.Id;
-            _root.NetworkManager.StartClient();
-            MenuManager.Instance.ChangeMenuPage(2);    
+            _lobbyId = new CSteamID(data.m_ulSteamIDLobby);
+
+            if (_isStartingHost) return; 
+
+            CSteamID hostId = SteamMatchmaking.GetLobbyOwner(_lobbyId);
+            _nm.ClientManager.StartConnection(hostId.m_SteamID.ToString());
+
+            MenuManager.Instance.ChangeMenuPage(2);
+        }
+
+        private void OnLobbyChatUpdate(LobbyChatUpdate_t data)
+        {
+            var lobbyId = new CSteamID(data.m_ulSteamIDLobby);
+            if (lobbyId != _lobbyId) return;
+
+            var stateChange = (EChatMemberStateChange)data.m_rgfChatMemberStateChange;
+            bool leftOrDisconnected = (stateChange & (EChatMemberStateChange.k_EChatMemberStateChangeLeft | EChatMemberStateChange.k_EChatMemberStateChangeDisconnected | EChatMemberStateChange.k_EChatMemberStateChangeKicked)) != 0;
+            if (!leftOrDisconnected) return;
+
+            var changedUser = new CSteamID(data.m_ulSteamIDUserChanged);
+            CSteamID owner = SteamMatchmaking.GetLobbyOwner(_lobbyId);
+
+            if (changedUser != owner) return;
+            if (_isDisconnecting) return;
+
+            _isDisconnecting = true;
+            _lobbyId = CSteamID.Nil;
+            _nm.ClientManager.StopConnection();
+            _isDisconnecting = false;
         }
 
         public void Disconnect()
         {
-            if (_isDisconnecting) return; 
+            if (_isDisconnecting) return;
             _isDisconnecting = true;
-            
-            _lobby.Leave();
-            _lobby = default;
 
-            if (_root.NetworkManager.IsServer && !_root.NetworkManager.IsClient) 
+            if (_lobbyId != CSteamID.Nil)
             {
-                foreach (var clientId in _root.NetworkManager.ConnectedClientsIds)
-                    _root.NetworkManager.DisconnectClient(clientId);
-        
-                _root.NetworkManager.Shutdown();
-                return;
+                SteamMatchmaking.LeaveLobby(_lobbyId);
+                _lobbyId = CSteamID.Nil;
             }
-    
-            if (_root.NetworkManager.IsClient && !_root.NetworkManager.IsServer) 
+            if (_nm.IsServerOnlyStarted)
             {
-                _root.NetworkManager.Shutdown(); 
-                return;
+                _nm.ServerManager.StopConnection(true);
             }
-    
-            if (_root.NetworkManager.IsHost) 
+            else if (_nm.IsClientOnlyStarted)
             {
-                _root.NetworkManager.Shutdown(); 
-            }        
+                _nm.ClientManager.StopConnection();
+            }
+            else if (_nm.IsHostStarted)
+            {
+                _nm.ClientManager.StopConnection();
+                _nm.ServerManager.StopConnection(true);
+            }
+
             _isDisconnecting = false;
         }
     }

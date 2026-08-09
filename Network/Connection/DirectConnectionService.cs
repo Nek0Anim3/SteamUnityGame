@@ -1,7 +1,10 @@
 ﻿using System.Threading.Tasks;
+using FishNet.Managing.Transporting;
+using FishNet.Transporting;
+using FishNet.Transporting.Tugboat;
 using UIManager.MainMenu;
 
-namespace Network
+namespace Network.Connection
 {
     public class DirectConnectionService : INetConnectionService
     {
@@ -10,7 +13,6 @@ namespace Network
         public DirectConnectionService(NetworkRoot root)
         {
             _root = root;
-            _root.NetworkManager.NetworkConfig.NetworkTransport = _root.UnityTransport;
             
             _root.UI.OnHostRequested += Void_StartHost;
             _root.UI.OnClientRequested += Void_ConnectClient;
@@ -19,9 +21,10 @@ namespace Network
         
         public Task<bool> StartHosting()
         {
-
-            _root.UnityTransport.SetConnectionData("127.0.0.1", 7777, "0.0.0.0");
-            bool success = _root.NetworkManager.StartHost();
+            Tugboat tugboat = _root.NetworkManager.TransportManager.GetTransport<Tugboat>();
+            tugboat.SetServerBindAddress("127.0.0.1", IPAddressType.IPv4);
+            tugboat.SetPort(7777);
+            bool success = _root.NetworkManager.ServerManager.StartConnection();
 
             return Task.FromResult(success);
             
@@ -29,8 +32,10 @@ namespace Network
 
         public Task<bool> StartClientConnection()
         {
-            _root.UnityTransport.SetConnectionData("127.0.0.1", 7777);
-            bool success = _root.NetworkManager.StartClient();
+            Tugboat tugboat = _root.NetworkManager.TransportManager.GetTransport<Tugboat>();
+            tugboat.SetServerBindAddress("127.0.0.1", IPAddressType.IPv4);
+            tugboat.SetPort(7777);
+            bool success = _root.NetworkManager.ClientManager.StartConnection();
             
             return Task.FromResult(success);
             
@@ -40,7 +45,7 @@ namespace Network
         
         public async void Void_StartHost()
         {
-            if (_root.NetworkManager.ShutdownInProgress)
+            if (!_root.NetworkManager.IsOffline)
             {
                 return;
             }
@@ -64,24 +69,20 @@ namespace Network
 
         public void Disconnect()
         {
-            if (_root.NetworkManager.IsServer && !_root.NetworkManager.IsClient) 
+            if (_root.NetworkManager.IsServerStarted && !_root.NetworkManager.IsHostStarted) 
             {
-                foreach (var clientId in _root.NetworkManager.ConnectedClientsIds)
-                    _root.NetworkManager.DisconnectClient(clientId);
-        
-                _root.NetworkManager.Shutdown();
+                foreach (var client in _root.NetworkManager.ServerManager.Clients.Values)
+                {
+                    client.Disconnect(true);
+                }
+                _root.NetworkManager.ServerManager.StopConnection(true);
                 return;
             }
     
-            if (_root.NetworkManager.IsClient && !_root.NetworkManager.IsServer) 
+            if (_root.NetworkManager.IsClientStarted && !_root.NetworkManager.IsHostStarted) 
             {
-                _root.NetworkManager.Shutdown(); 
+                _root.NetworkManager.ClientManager.StopConnection();
                 return;
-            }
-    
-            if (_root.NetworkManager.IsHost) 
-            {
-                _root.NetworkManager.Shutdown(); 
             }
         }
     }

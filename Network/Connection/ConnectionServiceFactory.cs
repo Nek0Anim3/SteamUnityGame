@@ -1,4 +1,6 @@
-﻿namespace Network
+﻿using Network.Connection;
+
+namespace Network
 {
     public class ConnectionServiceFactory
     {
