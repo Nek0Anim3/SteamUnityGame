@@ -1,6 +1,9 @@
 using System.Collections.Generic;
+using FishNet.Connection;
+using FishNet.Managing.Scened;
+using FishNet.Object;
 using Network;
-using Unity.Netcode;
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -14,39 +17,41 @@ public class NetSceneControl : NetworkBehaviour
     {
         if (Instance != null) Destroy(gameObject); 
         Instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
-    public override void OnNetworkSpawn()
+    public override void OnStartServer()
     {
-        if (IsServer)
+        if (IsServerInitialized)
         {
-            _root.NetworkManager.SceneManager.OnLoadEventCompleted += OnSceneLoadComplete;
+            _root.NetworkManager.SceneManager.OnLoadEnd += OnSceneLoadComplete;
             _root.UI.OnStartRequested += ChangeScene;
         }
     }
-    public override void OnNetworkDespawn()
+    public override void OnStopServer()
     {
-        if (IsServer && _root.NetworkManager != null && _root.NetworkManager.SceneManager != null)
+        if (IsServerInitialized && _root.NetworkManager != null && _root.NetworkManager.SceneManager != null)
         {
-            _root.NetworkManager.SceneManager.OnLoadEventCompleted -= OnSceneLoadComplete;
+            _root.NetworkManager.SceneManager.OnLoadEnd -= OnSceneLoadComplete;
         }
     }
     
     public void ChangeScene(string sceneName)
     {
         if (!IsServer) return;
-        
-        SceneEventProgressStatus status = _root.NetworkManager.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
-        if (status != SceneEventProgressStatus.Started)
-        {
-            Debug.LogError($"Failed to load scene: {status}");
-        }
+        SceneLoadData sceneLoadData = new SceneLoadData(sceneName);
+        _root.NetworkManager.SceneManager.LoadGlobalScenes(sceneLoadData);
     }
 
-    private void OnSceneLoadComplete(string str, LoadSceneMode mode, List<ulong> clientsCompleted, List<ulong> clientsTimeout)
+    private void OnSceneLoadComplete(SceneLoadEndEventArgs args)
     {
-        GameObject[] spawns =  GameObject.FindGameObjectsWithTag("Spawnpoint");
+        //==============================
+        // DEPRECATED
+        //==================================
+        // FISHNET WORKS DIFFERENT
+        // OLD SPAWN LOGIC FOR PLAYERS
+        //=================================
+        
+        /*GameObject[] spawns =  GameObject.FindGameObjectsWithTag("Spawnpoint");
         
         int spawnIndex = 0;
         Debug.Log($"[SceneLoad] Completed: {clientsCompleted.Count}, Timeout: {clientsTimeout.Count}");
@@ -69,7 +74,7 @@ public class NetSceneControl : NetworkBehaviour
             GameObject playerInstance = Instantiate(playerPrefab, spawnPosition, spawnRotation);
             NetworkObject netObj = playerInstance.GetComponent<NetworkObject>();
             netObj.SpawnAsPlayerObject(clientId, true); 
-        }
+        }*/
         
     }
 }

@@ -1,34 +1,26 @@
-﻿using System;
-using GameManagement;
-using Unity.Netcode;
-using Unity.Networking.Transport;
+﻿using FishNet.Connection;
+using FishNet.Managing;
+using FishNet.Transporting;
 using UnityEngine;
 
 namespace Network
 {
     public class NetworkConnectionManager : MonoBehaviour
     {
+        private NetworkManager _networkManager;
         private void Start()
         {
-            if (NetworkManager.Singleton != null)
+            if (_networkManager != null)
             {
-                NetworkManager.Singleton.OnConnectionEvent += OnNetworkConnect;
+                _networkManager.ServerManager.OnRemoteConnectionState += OnNetworkConnect;
             }
         }
 
-        private void OnNetworkConnect(NetworkManager sender, ConnectionEventData connData)
+        private void OnNetworkConnect(NetworkConnection connData, RemoteConnectionStateArgs args)
         {
-            switch (connData.EventType)
+            if (args.ConnectionState == RemoteConnectionState.Started)
             {
-                case ConnectionEvent.ClientConnected:
-                    Debug.Log($"[+]: Client {connData.ClientId} connected!");
-                    break;
-                case ConnectionEvent.ClientDisconnected:
-                    Debug.Log($"[-]: Client {connData.ClientId} disconnected!");
-                    break;
-                default:
-                    Debug.Log("connection event!");
-                    break;
+                Debug.Log("[+] Client Connected!");
             }
         }
     }

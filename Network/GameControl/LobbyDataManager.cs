@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using FishNet.Connection;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using FishNet.Transporting;
 using Network.GameControl;
-using Unity.Netcode;
 using UnityEngine;
 
 
@@ -9,7 +12,7 @@ public class LobbyDataManager : NetworkBehaviour
 {
     
     public static LobbyDataManager Instance;
-    private NetworkList<LobbyPlayerNames> _playerNameData;
+    private readonly SyncList<LobbyPlayerNames> _playerNameData;
     private List<string> _playerNames;
     
     public event Action<List<string>> OnLobbyEnteredNameData;
@@ -23,50 +26,55 @@ public class LobbyDataManager : NetworkBehaviour
             return;
         }
         Instance = this;
-        _playerNameData = new NetworkList<LobbyPlayerNames>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         _playerNames = new List<string>();
     }
     
     //Event
-    public override void OnNetworkSpawn()
+    public override void OnStartServer()
     {
-        _playerNameData.OnListChanged += SendUIMessage;
+        base.OnStartClient();
+        _playerNameData.OnChange += SendUIMessage;
         
-        if (IsServer)
+        if (IsServerInitialized)
         {
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnect;
+            NetworkManager.ServerManager.OnRemoteConnectionState += OnClientDisconnect;
             RequestClearNicknames();
-            _playerNameData.Add(new LobbyPlayerNames{ClientId = NetworkManager.Singleton.LocalClientId, Name = PlayerPrefs.Nickname});
+            _playerNameData.Add(new LobbyPlayerNames{ClientId = NetworkManager.ClientManager.Connection.ClientId, Name = PlayerPrefs.Nickname});
         }
         else
         {
-            RequestAddNickname(PlayerPrefs.Nickname, NetworkManager.Singleton.LocalClientId);
+            RequestAddNickname(PlayerPrefs.Nickname, NetworkManager.ClientManager.Connection.ClientId);
         }
         RefreshUI();
     }
     
     //Event
-    public override void OnNetworkDespawn()
+    public override void OnStopServer()
     {
         
-        _playerNameData.OnListChanged -= SendUIMessage;
-        if (IsServer)
+        _playerNameData.OnChange -= SendUIMessage;
+        if (IsServerStarted)
         {
-            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnect;
+            NetworkManager.ServerManager.OnRemoteConnectionState -= OnClientDisconnect;
         }
     }
     
     //Event
-    private void OnClientDisconnect(ulong clientId)
+    private void OnClientDisconnect(NetworkConnection connData, RemoteConnectionStateArgs args)
     {
-        LobbyPlayerNames? playerName = FindByClientId(clientId);
-        if (playerName.HasValue)
-        { 
-            _playerNameData.Remove(playerName.Value);    
+        if (args.ConnectionState == RemoteConnectionState.Stopped)
+        {
+            int clientId = connData.ClientId;
+            LobbyPlayerNames? playerName = FindByClientId(clientId);
+            if (playerName.HasValue)
+            { 
+                _playerNameData.Remove(playerName.Value);    
+            }
         }
+
     }
 
-    private void SendUIMessage(NetworkListEvent<LobbyPlayerNames> e)
+    private void SendUIMessage(SyncListOperation syncListOperation, int id, LobbyPlayerNames playerNamesOld, LobbyPlayerNames playerNamesNew, bool asServer)
     {
         Debug.Log($"SendUIMessage invoke");
         
@@ -84,7 +92,7 @@ public class LobbyDataManager : NetworkBehaviour
         OnLobbyEnteredNameData?.Invoke(_playerNames);
     }
     
-    private LobbyPlayerNames? FindByClientId(ulong clientId)
+    private LobbyPlayerNames? FindByClientId(int clientId)
     {
         foreach (var entry in _playerNameData)
         {
@@ -94,26 +102,20 @@ public class LobbyDataManager : NetworkBehaviour
     }
     
     
-    public void RequestAddNickname(string name, ulong clientId)
+    public void RequestAddNickname(string name, int clientId)
     {
         
         AddPlayerNameServerRpc(name, clientId);
     }
 
-    public void RequestRemoveNickname(ulong clientId)
-    {
-        Debug.Log($"RequestRemoveNickname");
-        RemovePlayerNameServerRpc(clientId);
-    }
-
     public void RequestClearNicknames()
     {
-        if (!IsServer) return;
+        if (!IsServerStarted) return;
         _playerNameData.Clear();
     }
     
-    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    private void RemovePlayerNameServerRpc(ulong clientId)
+    [ServerRpc]
+    private void RemovePlayerNameServerRpc(int clientId)
     {
         LobbyPlayerNames? playerName = FindByClientId(clientId);
         if (playerName == null) return;
@@ -121,8 +123,8 @@ public class LobbyDataManager : NetworkBehaviour
     }
     
     
-    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    private void AddPlayerNameServerRpc(string name, ulong clientId)
+    [ServerRpc]
+    private void AddPlayerNameServerRpc(string name, int clientId)
     {
         if (FindByClientId(clientId).HasValue) return;
         
