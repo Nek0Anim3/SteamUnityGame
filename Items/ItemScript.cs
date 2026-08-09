@@ -1,5 +1,5 @@
 using System;
-using Unity.Netcode;
+using FishNet.Object;
 using UnityEngine;
 
 public class ItemScript : NetworkBehaviour

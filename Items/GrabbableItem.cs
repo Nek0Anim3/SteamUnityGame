@@ -1,4 +1,5 @@
-using Unity.Netcode;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using UnityEngine;
 
 public class GrabbableItem : NetworkBehaviour
@@ -8,12 +9,8 @@ public class GrabbableItem : NetworkBehaviour
     [SerializeField] private bool FREEZE_ROTATION;
     public Rigidbody objectRb;
 
-    public NetworkVariable<bool> IsGrabbed = new NetworkVariable<bool>(
-        false,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Owner
-        );
-
+    private readonly SyncVar<bool> _isGrabbed = new SyncVar<bool>(false, new SyncTypeSettings(WritePermission.ServerOnly, ReadPermission.Observers));
+    public bool IsGrabbed => _isGrabbed.Value;
     private float _DRAG;
     private float _ANGDRAG;
     private bool _USEGRAVITY;
@@ -28,7 +25,7 @@ public class GrabbableItem : NetworkBehaviour
         _RBCONSTR = objectRb.constraints;
     }
     
-    public override void OnNetworkSpawn()
+    public override void OnStartClient()
     {
         objectRb.isKinematic = !IsOwner;
     }
@@ -42,12 +39,12 @@ public class GrabbableItem : NetworkBehaviour
         {
             objectRb.constraints = RigidbodyConstraints.FreezeRotation;
         }
-        IsGrabbed.Value = true;
+        _isGrabbed.Value = true;
     }
 
     public void OnRelease(Vector3 throwVel)
     {
-        IsGrabbed.Value = false;
+        _isGrabbed.Value = false;
         objectRb.useGravity = true;
         objectRb.linearDamping = _DRAG;
         objectRb.angularDamping = _ANGDRAG;
@@ -56,7 +53,7 @@ public class GrabbableItem : NetworkBehaviour
         if (IsOwner) ReturnOwnershipRpc();
     }
 
-    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    [ServerRpc]
     private void ReturnOwnershipRpc()
     {
         NetworkObject.RemoveOwnership();
