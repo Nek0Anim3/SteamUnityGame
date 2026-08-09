@@ -1,28 +1,25 @@
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using TMPro;
 using Unity.Collections;
-using Unity.Netcode;
 using UnityEngine;
 
 public class PlayerNickname : NetworkBehaviour
 {
-    public NetworkVariable<FixedString128Bytes> Nickname = new NetworkVariable<FixedString128Bytes>(
-        "Default PlayerName",
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server
-    );
+    private readonly SyncVar<FixedString128Bytes> Nickname = new SyncVar<FixedString128Bytes>("Name",
+        new SyncTypeSettings(WritePermission.ServerOnly, ReadPermission.Observers));
     
 
     [SerializeField] private TMP_Text nicknameText;
     void Start()
     {
-        Nickname.OnValueChanged += UpdateNickname;
+        Nickname.OnChange += UpdateNickname;
     }
 
-    
-    public override void OnNetworkSpawn()
+
+    public override void OnStartClient()
     {
-       
-        Nickname.OnValueChanged += UpdateNickname;
+        Nickname.OnChange += UpdateNickname;
         UpdateNicknameUI(Nickname.Value.ToString());
         if (IsOwner)
         {
@@ -32,10 +29,11 @@ public class PlayerNickname : NetworkBehaviour
     }
     
     //net
-    public override void OnNetworkDespawn()
+    public override void OnStopClient()
     {
-        Nickname.OnValueChanged -= UpdateNickname;
+        Nickname.OnChange -= UpdateNickname;
     }
+
     
     [ServerRpc]
     private void SetNicknameServerRpc(string newName)
@@ -43,7 +41,7 @@ public class PlayerNickname : NetworkBehaviour
         Nickname.Value = newName;
     }
     
-    private void UpdateNickname(FixedString128Bytes oldValue, FixedString128Bytes value)
+    private void UpdateNickname(FixedString128Bytes oldValue, FixedString128Bytes value, bool asServer)
     {
         UpdateNicknameUI(value.ToString());
     }

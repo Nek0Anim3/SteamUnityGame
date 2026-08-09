@@ -1,32 +1,36 @@
+using FishNet.CodeGenerating;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using Player;
 using TMPro;
-using Unity.Netcode;
+
 using UnityEngine;
 
 public class PlayerHealth : NetworkBehaviour, IDamageable
 {
-    public NetworkVariable<float> playerHealth = new NetworkVariable<float>(100.0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-     
-    public override void OnNetworkSpawn()
+    private readonly SyncVar<float> playerHealth = new SyncVar<float>(100.0f,new SyncTypeSettings(WritePermission.ServerOnly, ReadPermission.Observers));
+    public float PlayerHp => playerHealth.Value;
+    
+    public override void OnStartClient()
     {
-        base.OnNetworkSpawn();
-        playerHealth.OnValueChanged += OnHealthChanged;
+        base.OnStartClient();
+        playerHealth.OnChange += OnHealthChanged;
     }
 
-    public override void OnNetworkDespawn()
+    public override void OnStopClient()
     {
-        playerHealth.OnValueChanged -= OnHealthChanged;
-        base.OnNetworkDespawn();
+        playerHealth.OnChange -= OnHealthChanged;
+        base.OnStopClient();
     }
 
-    private void OnHealthChanged(float oldVal, float newVal)
+    private void OnHealthChanged(float oldVal, float newVal, bool asServer)
     {
         Debug.Log($"Client hp changed to -> {newVal}");
     }
 
     public void TakeDamage(float damage)
     {
-        if (IsServer) 
+        if (IsServerInitialized) 
         {
             playerHealth.Value -= damage;
             return;

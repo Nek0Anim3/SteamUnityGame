@@ -1,7 +1,4 @@
-using System.Numerics;
-using UI;
-using Unity.Netcode;
-using Unity.VisualScripting.Dependencies.NCalc;
+using FishNet.Object;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Quaternion = UnityEngine.Quaternion;
@@ -59,7 +56,7 @@ namespace Player.PlayerMovement
         private float CAM_STAND_HEIGHT;
         public CrouchState crouchState {get; private set;}
         private bool crouchInputHeld;
-        RaycastHit[] hitBuff = new RaycastHit[2];
+        private RaycastHit[] hitBuff = new RaycastHit[1];
         private Vector2 moveInput;
         private Vector2 lookInput;
         private float verticalVelocity;
@@ -96,8 +93,9 @@ namespace Player.PlayerMovement
         }
 
 
-        public override void OnNetworkSpawn()
+        public override void OnStartClient()
         {
+            base.OnStartClient();
             if (IsOwner)
             {
                 
@@ -123,9 +121,10 @@ namespace Player.PlayerMovement
             jumpAction.Disable();
         }
         
-        public override void OnNetworkDespawn()
+        public override void OnStopClient()
         {
             if (IsOwner) moveAction.Disable();
+            base.OnStopClient();
         }
 
         private void OnJump(InputAction.CallbackContext ctx)
@@ -179,7 +178,6 @@ namespace Player.PlayerMovement
         private bool CanStandup()
         {
             Ray ray = new Ray(playerHead.transform.position, Vector3.up);
-
             int hitCount = Physics.SphereCastNonAlloc(ray, 0.51f, hitBuff, 0.5f, groundMask);
             if (hitCount > 0)
             {
@@ -218,7 +216,7 @@ namespace Player.PlayerMovement
             rb.linearVelocity = new Vector3(_smoothedMoveDirection.x, verticalVelocity, _smoothedMoveDirection.z);
             //========
             // UI DEBUG
-            UIDebug.Instance.MOVESPEED = rb.linearVelocity.magnitude - 2.2f;
+            /*UIDebug.Instance.MOVESPEED = rb.linearVelocity.magnitude - 2.2f;*/
             //========
         }
 

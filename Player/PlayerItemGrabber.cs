@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿
 using System.Collections.Generic;
-using Unity.Netcode;
+using FishNet.Object;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -101,10 +100,10 @@ namespace Player
             Ray ray = playerCam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0.0f));
             if (!Physics.Raycast(ray, out RaycastHit hit, _GRABRANGE, _interactableLayer)) return;
             GrabbableItem grabbedItem = hit.collider.GetComponent<GrabbableItem>();
-            if (grabbedItem == null || grabbedItem.IsGrabbed.Value) return;
+            if (grabbedItem == null || grabbedItem.IsGrabbed) return;
             
             _HOLDDIST = Mathf.Clamp(hit.distance, _MIN_HOLDDIST, _MAX_HOLDDIST);
-            RequestGrabRpc(grabbedItem.NetworkObject.NetworkObjectId);
+            RequestGrabRpc(grabbedItem.NetworkObject.ObjectId);
         }
         
         private void Release(bool drop)
@@ -158,22 +157,21 @@ namespace Player
         //========================= 
         // NETWORK
         //======================
-        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-        private void RequestGrabRpc(ulong netObjId, RpcParams rpcParams = default)
+        [ServerRpc]
+        private void RequestGrabRpc(int netObjId)
         {
-            if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(netObjId, out var obj)) return;
+            NetworkObject obj = NetworkManager.SpawnablePrefabs.GetObject(true, netObjId);
+            if (obj == null) return;
             GrabbableItem grabbable = obj.GetComponent<GrabbableItem>();
-            if (grabbable.IsGrabbed.Value) return; //if .Value == true
-
-            ulong reqId = rpcParams.Receive.SenderClientId;
-            obj.ChangeOwnership(reqId); // Gives 'Owner' to client
-            ConfirmGrabRpc(netObjId, RpcTarget.Single(reqId, RpcTargetUse.Temp));
+            if (grabbable.IsGrabbed) return; 
+            obj.GiveOwnership(base.Owner);
+            ConfirmGrabRpc(netObjId);
         }
 
-        [Rpc(SendTo.SpecifiedInParams)]
-        private void ConfirmGrabRpc(ulong netObjId, RpcParams rpcParams)
+        [ServerRpc]
+        private void ConfirmGrabRpc(int netObjId)
         {
-            NetworkObject netObj = NetworkManager.Singleton.SpawnManager.SpawnedObjects[netObjId];
+            NetworkObject netObj = NetworkManager.SpawnablePrefabs.GetObject(true, netObjId);
             GrabbableItem grabbable = netObj.GetComponent<GrabbableItem>();
             grabbable.OnGrab();
             _heldItem = grabbable;
