@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Player
 {
-    public class PlayerItemGrabber : MonoBehaviour
+    public class PlayerItemGrabber : NetworkBehaviour
     {
         [SerializeField] private HUDInitializer HUDController;
         private UICrosshair crosshair;
@@ -23,7 +24,6 @@ namespace Player
         [SerializeField] private float _FOLLOWSPEED;
         [SerializeField] private float _MAXFOLLFORCE;
         [SerializeField] private float _VELOCITYDAMPING;
-        
         [SerializeField] private float _THROWFORCE;
         [SerializeField] private int _THROWFRAMES = 5;
 
@@ -101,12 +101,10 @@ namespace Player
             Ray ray = playerCam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0.0f));
             if (!Physics.Raycast(ray, out RaycastHit hit, _GRABRANGE, _interactableLayer)) return;
             GrabbableItem grabbedItem = hit.collider.GetComponent<GrabbableItem>();
-            if (grabbedItem == null || grabbedItem.IsGrabbed) return;
-            _heldItem = grabbedItem;
+            if (grabbedItem == null || grabbedItem.IsGrabbed.Value) return;
+            
             _HOLDDIST = Mathf.Clamp(hit.distance, _MIN_HOLDDIST, _MAX_HOLDDIST);
-            _heldItem.OnGrab();
-            crosshair.SetCrosshair(2);
-            _cameraVelocityHistory.Clear();
+            RequestGrabRpc(grabbedItem.NetworkObject.NetworkObjectId);
         }
         
         private void Release(bool drop)
@@ -154,6 +152,33 @@ namespace Player
                 sum += v;
             }
             return sum / _cameraVelocityHistory.Count;
+        }
+        
+        
+        //========================= 
+        // NETWORK
+        //======================
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+        private void RequestGrabRpc(ulong netObjId, RpcParams rpcParams = default)
+        {
+            if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(netObjId, out var obj)) return;
+            GrabbableItem grabbable = obj.GetComponent<GrabbableItem>();
+            if (grabbable.IsGrabbed.Value) return; //if .Value == true
+
+            ulong reqId = rpcParams.Receive.SenderClientId;
+            obj.ChangeOwnership(reqId); // Gives 'Owner' to client
+            ConfirmGrabRpc(netObjId, RpcTarget.Single(reqId, RpcTargetUse.Temp));
+        }
+
+        [Rpc(SendTo.SpecifiedInParams)]
+        private void ConfirmGrabRpc(ulong netObjId, RpcParams rpcParams)
+        {
+            NetworkObject netObj = NetworkManager.Singleton.SpawnManager.SpawnedObjects[netObjId];
+            GrabbableItem grabbable = netObj.GetComponent<GrabbableItem>();
+            grabbable.OnGrab();
+            _heldItem = grabbable;
+            crosshair.SetCrosshair(2);
+            _cameraVelocityHistory.Clear();
         }
     }
 }

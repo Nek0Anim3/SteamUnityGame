@@ -1,7 +1,8 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
 
-public class ItemScript : MonoBehaviour
+public class ItemScript : NetworkBehaviour
 {
     [SerializeField] private ItemBase itemData;
     private ValueTuple<string, string, Sprite> itemInfo;
