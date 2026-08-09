@@ -1,7 +1,6 @@
 using Steamworks;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class UISteamData : MonoBehaviour
 {
@@ -9,7 +8,7 @@ public class UISteamData : MonoBehaviour
     
     void Start()
     {
-        NickName.text = $"Welcome, {SteamClient.Name}";
+        NickName.text = $"Welcome, {SteamFriends.GetPersonaName()}";
     }
 
 
