@@ -1,6 +1,4 @@
-using Enemy;
-using UI;
-using Unity.Netcode;
+using FishNet.Object;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -18,9 +16,10 @@ public class EnemyMovement : NetworkBehaviour
 
     }
     
-    public override void OnNetworkSpawn()
+    public override void OnStartServer()
     {
-        if (!IsServer) { enabled = false; }
+        base.OnStartServer();
+        if (!IsServerInitialized) { enabled = false; }
         navAgent = GetComponent<NavMeshAgent>();
         DistanceToPoint = 5.0f;
 

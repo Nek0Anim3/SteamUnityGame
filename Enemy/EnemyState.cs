@@ -1,8 +1,6 @@
-using System;
 using Enemy;
 using Enemy.States;
-using UI;
-using Unity.Netcode;
+using FishNet.Object;
 using UnityEngine;
 
 public enum EnemyStates
@@ -46,8 +44,9 @@ public class EnemyState : NetworkBehaviour
         
     }
 
-    public override void OnNetworkSpawn()
+    public override void OnStartServer()
     {
+        base.OnStartServer();
         if (!IsServer) { enabled = false; }
         _enemyState.Enter();
     }
