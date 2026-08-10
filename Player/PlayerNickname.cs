@@ -6,8 +6,9 @@ using UnityEngine;
 
 public class PlayerNickname : NetworkBehaviour
 {
-    private readonly SyncVar<FixedString128Bytes> Nickname = new SyncVar<FixedString128Bytes>("Name",
+    private readonly SyncVar<string> Nickname = new SyncVar<string>("Name",
         new SyncTypeSettings(WritePermission.ServerOnly, ReadPermission.Observers));
+    
     
 
     [SerializeField] private TMP_Text nicknameText;
@@ -41,7 +42,7 @@ public class PlayerNickname : NetworkBehaviour
         Nickname.Value = newName;
     }
     
-    private void UpdateNickname(FixedString128Bytes oldValue, FixedString128Bytes value, bool asServer)
+    private void UpdateNickname(string oldValue, string value, bool asServer)
     {
         UpdateNicknameUI(value.ToString());
     }

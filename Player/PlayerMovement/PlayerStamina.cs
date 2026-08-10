@@ -57,9 +57,6 @@ public class PlayerStamina : NetworkBehaviour
             isFull = false;
             OnSprintStart?.Invoke();
             isSprinting = true;
-            //======
-            // UI DEBUG
-            UIDebug.Instance.IS_SPRINTING = isSprinting.ToString();
         }
 
     }
@@ -68,9 +65,6 @@ public class PlayerStamina : NetworkBehaviour
     {
         _playerController.moveMultiplier = 1.0f;
         isSprinting = false;
-        //======
-        // UI DEBUG
-        UIDebug.Instance.IS_SPRINTING = isSprinting.ToString();
     }
 
     public void ForceStopSprint()
@@ -120,10 +114,6 @@ public class PlayerStamina : NetworkBehaviour
             }
                 
         }
-        //========
-        // UI DEBUG
-        UIDebug.Instance.SPRINT_VAL = (float)Stamina / StaminaMax;
-        //========
         OnStaminaChange?.Invoke((float)Stamina / StaminaMax);
     }
 }

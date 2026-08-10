@@ -118,7 +118,6 @@ namespace Player.PlayerMovement
             }
     
             rb.isKinematic = true; 
-            playerCam.gameObject.SetActive(false);
             moveAction.Disable();
             jumpAction.Disable();
         }

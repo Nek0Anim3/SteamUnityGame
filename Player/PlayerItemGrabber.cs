@@ -40,8 +40,9 @@ namespace Player
             _scrollAction = _inputActionAsset.FindActionMap("Player").FindAction("Scroll");
         }
 
-        private void Start()
+        public override void OnStartClient()
         {
+            base.OnStartClient();
             crosshair = HUDController.GetCrosshair();
             _holdAction.Enable();
             _scrollAction.Enable();
@@ -49,12 +50,13 @@ namespace Player
             _holdAction.canceled += OnReleaseInput;
         }
 
-        private void OnDisable()
+        public override void OnStopClient()
         {
             _holdAction.started -= OnGrabInput;
             _holdAction.canceled -= OnReleaseInput;
             _holdAction.Disable();
             _scrollAction.Disable();
+            base.OnStopClient();
         }
 
         private void Update()

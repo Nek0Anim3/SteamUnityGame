@@ -43,6 +43,7 @@ namespace Network.GameControl
             NetworkObject instance = NetworkManager.GetPooledInstantiated(playerPrefab, asServer: true);
             instance.transform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
             ServerManager.Spawn(instance, conn);
+            SceneManager.AddOwnerToDefaultScene(instance); 
         }
     }
 }
