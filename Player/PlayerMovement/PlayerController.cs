@@ -18,7 +18,8 @@ namespace Player.PlayerMovement
     {
         private Transform playerTransform;
         [SerializeField] private Transform orientation;   
-        [SerializeField] private Transform cameraHolder; 
+        [SerializeField] private Transform cameraHolder;
+        [SerializeField] private Camera CameraPrefab;
         [SerializeField] private Camera playerCam;
         [SerializeField] private Transform playerHead;
         [SerializeField] private PlayerStamina playerStamina;
@@ -107,8 +108,9 @@ namespace Player.PlayerMovement
                 jumpAction.performed += OnJump;
                 crouchAction.started += OnStartCrouch;
                 crouchAction.canceled += OnEndCrouch;
-                
-                playerCam.gameObject.SetActive(true);
+
+                playerCam = Instantiate(CameraPrefab, cameraHolder);
+                playerCam.transform.localPosition = Vector3.zero;
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
                 Debug.Log(cameraHolder.localPosition);
