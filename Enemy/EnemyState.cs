@@ -47,7 +47,7 @@ public class EnemyState : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
-        if (!IsServer) { enabled = false; }
+        if (!IsServerInitialized) { enabled = false; }
         _enemyState.Enter();
     }
 

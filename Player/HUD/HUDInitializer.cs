@@ -13,6 +13,7 @@ public class HUDInitializer : NetworkBehaviour
 
     public override void OnStartClient()
     {
+        base.OnStartClient();
         if (!IsOwner) return;
         hudInstance = Instantiate(HUDPrefab);
         UIItemHint itemHint = hudInstance.GetComponent<UIItemHint>();
@@ -32,6 +33,7 @@ public class HUDInitializer : NetworkBehaviour
     {
         playerStamina.OnSprintStart -= HUDAnimation.ShowSprintBar;
         playerStamina.OnSprintStop -= HUDAnimation.HideSprintBar;
+        base.OnStopClient();
     }
     //methods to get smth from hud
     public UICrosshair GetCrosshair()

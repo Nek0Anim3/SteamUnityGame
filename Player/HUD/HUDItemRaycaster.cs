@@ -9,7 +9,6 @@ public class HUDItemRaycaster : MonoBehaviour
     private RaycastHit[] _hitResults = new RaycastHit[5];
     
     public event Action<(string, string, Sprite)> OnItemVisible;
-    public event Action<Vector3, Camera> OnItemPositionGet;
     public event Action OnItemDisappeared;
     private bool isVisible;
     private RaycastHit _currentObject;
