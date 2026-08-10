@@ -12,7 +12,7 @@ public class LobbyDataManager : NetworkBehaviour
 {
     
     public static LobbyDataManager Instance;
-    private readonly SyncList<LobbyPlayerNames> _playerNameData;
+    private readonly SyncList<LobbyPlayerNames> _playerNameData = new SyncList<LobbyPlayerNames>(new SyncTypeSettings(WritePermission.ServerOnly, ReadPermission.Observers));
     private List<string> _playerNames;
     
     public event Action<List<string>> OnLobbyEnteredNameData;
