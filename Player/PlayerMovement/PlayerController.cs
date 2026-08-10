@@ -18,14 +18,14 @@ namespace Player.PlayerMovement
     {
         private Transform playerTransform;
         [SerializeField] private Transform orientation;   
-        [SerializeField] private Transform cameraHolder;
-        [SerializeField] private Camera CameraPrefab;
+        private Transform cameraHolder;
+        private Camera CameraPrefab;
         [SerializeField] private Camera playerCam;
         [SerializeField] private Transform playerHead;
         [SerializeField] private PlayerStamina playerStamina;
         private Collider playerCollider;
         [SerializeField] private CapsuleCollider capsule;
-
+        
 
         public InputActionAsset inputAsset;
         private InputAction moveAction;
@@ -72,7 +72,15 @@ namespace Player.PlayerMovement
         [SerializeField] private LayerMask groundMask;
         
         private float verticalRotation;
-    
+
+        public void InitCamera(Camera cam, Transform camHold)
+        {
+            playerCam = cam;
+            cameraHolder = camHold;
+            CAM_STAND_HEIGHT = cameraHolder.transform.position.y;
+            enabled = true;
+        }
+        
         private void Awake()
         {
             inputAsset = Instantiate(inputAsset);
@@ -89,8 +97,9 @@ namespace Player.PlayerMovement
 
             CROUCH_HEIGHT = capsule.height - 1.0f;
             STANDING_HEIGHT = capsule.height;
-            CAM_STAND_HEIGHT = cameraHolder.transform.position.y;
+            
             CAM_CROUCH_HEIGHT = CAM_STAND_HEIGHT - 0.5f;
+            if (playerCam == null) enabled = false;
         }
 
 
@@ -108,12 +117,10 @@ namespace Player.PlayerMovement
                 jumpAction.performed += OnJump;
                 crouchAction.started += OnStartCrouch;
                 crouchAction.canceled += OnEndCrouch;
-
-                playerCam = Instantiate(CameraPrefab, cameraHolder);
-                playerCam.transform.localPosition = Vector3.zero;
+                
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
-                Debug.Log(cameraHolder.localPosition);
+                
                 return;
             }
     

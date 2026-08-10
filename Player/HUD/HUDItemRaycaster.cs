@@ -1,9 +1,10 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class HUDItemRaycaster : MonoBehaviour
 {
-    [SerializeField] private Camera playerCam;
+    private Camera playerCam;
     private float _rayDistance = 1.7f;
     [SerializeField] private LayerMask interactableLayer;
     private RaycastHit[] _hitResults = new RaycastHit[5];
@@ -13,10 +14,21 @@ public class HUDItemRaycaster : MonoBehaviour
     private bool isVisible;
     private RaycastHit _currentObject;
     private RaycastHit _nearestObject;
+
+    private void Awake()
+    {
+        enabled = false;
+    }
     
+    public void InitCamera(Camera PlayerCam, Transform camHolder)
+    {
+        playerCam = PlayerCam;
+        enabled = true;
+        Debug.Log("[HUDItemRaycaster] Camera Initialized");
+    }
     void LateUpdate()
     {
-        
+        if (playerCam.IsUnityNull()) return;
         Ray ray = playerCam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0.0f));
         Debug.DrawRay(ray.origin, ray.direction * _rayDistance, Color.red);
         int hitCount = Physics.SphereCastNonAlloc(ray, 0.18f, _hitResults, _rayDistance, interactableLayer, QueryTriggerInteraction.Collide);

@@ -7,6 +7,7 @@ public class HUDInitializer : NetworkBehaviour
     [SerializeField] private GameObject HUDPrefab;
     [SerializeField] private PlayerStamina playerStamina;
     [SerializeField] private HUDItemRaycaster _itemRaycaster;
+
     private GameObject hudInstance;
     private HUD_Stamina hudStamina;
     private HUDAnimationManager HUDAnimation;
@@ -16,6 +17,9 @@ public class HUDInitializer : NetworkBehaviour
         base.OnStartClient();
         if (!IsOwner) return;
         hudInstance = Instantiate(HUDPrefab);
+        
+        /*_itemRaycaster.Init();*/
+
         UIItemHint itemHint = hudInstance.GetComponent<UIItemHint>();
         itemHint.Init(_itemRaycaster);
         hudStamina = hudInstance.GetComponent<HUD_Stamina>();
@@ -27,6 +31,7 @@ public class HUDInitializer : NetworkBehaviour
         //HUDAnimation.Instance
         playerStamina.OnSprintStart += HUDAnimation.ShowSprintBar;
         playerStamina.OnSprintStop += HUDAnimation.HideSprintBar;
+        
     }
 
     public override void OnStopClient()

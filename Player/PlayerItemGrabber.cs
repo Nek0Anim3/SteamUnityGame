@@ -11,7 +11,7 @@ namespace Player
         [SerializeField] private HUDInitializer HUDController;
         private UICrosshair crosshair;
         
-        [SerializeField] Camera playerCam;
+        private Camera playerCam;
         
         [SerializeField] private float _GRABRANGE;
         [SerializeField] private float _HOLDDIST;
@@ -38,6 +38,13 @@ namespace Player
         {
             _holdAction = _inputActionAsset.FindActionMap("Player").FindAction("Grab");
             _scrollAction = _inputActionAsset.FindActionMap("Player").FindAction("Scroll");
+            if (playerCam == null) enabled = false;
+        }
+
+        public void InitCamera(Camera cam, Transform camHold)
+        {
+            playerCam = cam;
+            enabled = true;
         }
 
         public override void OnStartClient()
