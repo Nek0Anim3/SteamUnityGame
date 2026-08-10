@@ -25,17 +25,15 @@ namespace Network.Connection
             tugboat.SetServerBindAddress("127.0.0.1", IPAddressType.IPv4);
             tugboat.SetPort(7777);
             bool success = _root.NetworkManager.ServerManager.StartConnection();
-
+            if (!success) return Task.FromResult(false);
+            _root.NetworkManager.ClientManager.StartConnection(); //Client in fishnet explicitly starts with func
             return Task.FromResult(success);
             
         }
 
         public Task<bool> StartClientConnection()
         {
-            Tugboat tugboat = _root.NetworkManager.TransportManager.GetTransport<Tugboat>();
-            tugboat.SetServerBindAddress("127.0.0.1", IPAddressType.IPv4);
-            tugboat.SetPort(7777);
-            bool success = _root.NetworkManager.ClientManager.StartConnection();
+            bool success = _root.NetworkManager.ClientManager.StartConnection("127.0.0.1", 7777);
             
             return Task.FromResult(success);
             
