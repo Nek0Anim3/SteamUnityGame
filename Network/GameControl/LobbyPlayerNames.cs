@@ -3,6 +3,7 @@ using Unity.Collections;
 
 namespace Network.GameControl
 {
+    [System.Serializable]
     public struct LobbyPlayerNames : IEquatable<LobbyPlayerNames>
     {
         public int ClientId;

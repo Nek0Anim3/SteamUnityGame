@@ -59,8 +59,10 @@ namespace Network
             {
                 _steamInitialized = SteamAPI.Init();
                 if (!_steamInitialized) return false;
-            }
 
+            }
+            //Player nick
+            PlayerPrefs.Nickname = SteamFriends.GetPersonaName();
             _isStartingHost = true;
             _createLobbyTcs = new TaskCompletionSource<bool>();
 
@@ -77,6 +79,13 @@ namespace Network
 
             SteamMatchmaking.SetLobbyJoinable(_lobbyId, true);
 
+            FishySteamworks.FishySteamworks transport =
+                _nm.TransportManager.GetTransport<FishySteamworks.FishySteamworks>();
+            if (!transport)
+            {
+                Debug.LogWarning("Fishy Steamworks NOT FOUND!");
+            } 
+            
             _nm.ServerManager.StartConnection();
             _nm.ClientManager.StartConnection();
 

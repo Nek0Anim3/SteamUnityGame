@@ -32,12 +32,12 @@ public class LobbyDataManager : NetworkBehaviour
     //Event
     public override void OnStartServer()
     {
-        base.OnStartClient();
+        base.OnStartServer();
         _playerNameData.OnChange += SendUIMessage;
         
         if (IsServerInitialized)
         {
-            NetworkManager.ServerManager.OnRemoteConnectionState += OnClientDisconnect;
+            NetworkManager.ServerManager.OnRemoteConnectionState += OnClientConnection;
             RequestClearNicknames();
             _playerNameData.Add(new LobbyPlayerNames{ClientId = NetworkManager.ClientManager.Connection.ClientId, Name = PlayerPrefs.Nickname});
         }
@@ -55,12 +55,14 @@ public class LobbyDataManager : NetworkBehaviour
         _playerNameData.OnChange -= SendUIMessage;
         if (IsServerStarted)
         {
-            NetworkManager.ServerManager.OnRemoteConnectionState -= OnClientDisconnect;
+            NetworkManager.ServerManager.OnRemoteConnectionState -= OnClientConnection;
         }
+
+        base.OnStopServer();
     }
     
     //Event
-    private void OnClientDisconnect(NetworkConnection connData, RemoteConnectionStateArgs args)
+    private void OnClientConnection(NetworkConnection connData, RemoteConnectionStateArgs args)
     {
         if (args.ConnectionState == RemoteConnectionState.Stopped)
         {
@@ -70,6 +72,11 @@ public class LobbyDataManager : NetworkBehaviour
             { 
                 _playerNameData.Remove(playerName.Value);    
             }
+            RefreshUI();
+        }
+        else
+        {
+            RequestAddNickname(PlayerPrefs.Nickname, connData.ClientId);
         }
 
     }
