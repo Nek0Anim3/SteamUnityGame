@@ -67,7 +67,7 @@ namespace Network.Connection
 
         public void Disconnect()
         {
-            if (_root.NetworkManager.IsServerStarted && !_root.NetworkManager.IsHostStarted) 
+            if (_root.NetworkManager.IsServerStarted) 
             {
                 foreach (var client in _root.NetworkManager.ServerManager.Clients.Values)
                 {
@@ -77,7 +77,7 @@ namespace Network.Connection
                 return;
             }
     
-            if (_root.NetworkManager.IsClientStarted && !_root.NetworkManager.IsHostStarted) 
+            if (_root.NetworkManager.IsClientStarted) 
             {
                 _root.NetworkManager.ClientManager.StopConnection();
                 return;
